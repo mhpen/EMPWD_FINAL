@@ -5,7 +5,9 @@ import {
   updateJobPosting,
   getJobs,
   getJobPostingById,
-  deleteJob
+  deleteJob,
+  updateIsStarred,
+  deleteMultipleJobs
 } from '../controllers/jobController.js';
 
 const router = express.Router();
@@ -24,5 +26,9 @@ router.get('/', getJobs);  // Make sure this line exists
 
 // DELETE route for removing jobs
 router.delete('/delete-job/:id', deleteJob);
+
+router.patch('/:id/is-starred', updateIsStarred);
+
+router.delete('/delete-multiple', deleteMultipleJobs);
 
 export default router;

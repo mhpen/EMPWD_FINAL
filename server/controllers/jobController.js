@@ -53,6 +53,35 @@ export const updateJobPosting = async (req, res) => {
   }
 };
 
+export const updateIsStarred = async (req, res) => {
+  const { id } = req.params; // Job ID from URL params
+  const { isStarred } = req.body; // Boolean value from request body
+
+  try {
+    // Validate isStarred is a boolean
+    if (typeof isStarred !== 'boolean') {
+      return res.status(400).json({ message: 'isStarred must be a boolean value' });
+    }
+
+    // Find and update the job's isStarred field
+    const updatedJob = await Job.findByIdAndUpdate(
+      id,
+      { isStarred },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    res.status(200).json({
+      message: 'Job isStarred status updated successfully',
+      job: updatedJob
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating isStarred status', error });
+  }
+};
 // Enhanced get all jobs with filtering, sorting, and pagination
 export const getJobs = async (req, res) => {
   try {
@@ -180,6 +209,29 @@ export const getJobs = async (req, res) => {
   }
 };
 
+export const deleteMultipleJobs = async (req, res) => {
+  const { jobIds } = req.body; // Expecting an array of job IDs
+
+  try {
+    // Check if jobIds array is provided and not empty
+    if (!jobIds || jobIds.length === 0) {
+      return res.status(400).json({ message: 'No job IDs provided' });
+    }
+
+    // Delete multiple jobs
+    const result = await Job.deleteMany({ _id: { $in: jobIds } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'No jobs found to delete' });
+    }
+
+    res.status(200).json({
+      message: `${result.deletedCount} job(s) deleted successfully`
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting jobs', error });
+  }
+};
 // Delete job posting
 export const deleteJob = async (req, res) => {
   const { id } = req.params;

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 
 const Login = () => {
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -16,7 +18,7 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   }
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,16 +28,29 @@ const Login = () => {
     try {
       const res = await axios.post('/api/auth/login', formData);
       // Extract token and userId from the response
-      const { token, userId } = res.data;
+      const { token, userId, role } = res.data;
 
       // Store the token and userId in local storage or state
       localStorage.setItem('token', token); 
       localStorage.setItem('userId', userId); 
+      localStorage.setItem('userRole', role);
 
       setSuccess(res.data.message);
       console.log("succesfully logged", success);
       console.log("Successfully logged in. User ID:", userId);
+      console.log("Role: ", role)
       alert('succesfully logged')
+
+      if (role == 'jobseeker'){
+        navigate('/job-list');
+      }else if (role == 'employer'){
+        navigate('/job-dashboard');
+      }
+      else{
+        alert('error')
+      }
+
+
     } catch (error) {
       console.error('Error logging user:', error);
       setError(error.response?.data?.message || 'Login failed');

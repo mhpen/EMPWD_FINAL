@@ -3,6 +3,13 @@ import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const JobBoard = () => {
+  
+  // Get the userId in local storage or state
+  const userId = localStorage.getItem('userId'); 
+  const userRole = localStorage.getItem('userRole');
+  console.log("User ID:", userId);
+  console.log("Role: ", userRole)
+
   const navigate = useNavigate(); // Add this line to use navigation
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);

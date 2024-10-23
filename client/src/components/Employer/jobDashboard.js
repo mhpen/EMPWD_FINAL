@@ -92,17 +92,37 @@ const ManageJobs = () => {
     navigate('/employers/create-job');
   };
 
-  const toggleStar = (jobId, event) => {
-    event.stopPropagation();
-    setStarredJobs(prev => {
-      const newStarred = new Set(prev);
-      if (newStarred.has(jobId)) {
-        newStarred.delete(jobId);
-      } else {
-        newStarred.add(jobId);
+  const toggleStar = async (jobId, currentStarStatus) => {
+    try {
+      // Toggling the current star status: If false, make true; if true, make false
+      const newStarStatus = !currentStarStatus;
+
+      // Send the PATCH request to the backend to update the star status
+      const response = await fetch(`/api/jobs/${jobId}/is-starred`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isStarred: newStarStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update star status');
       }
-      return newStarred;
-    });
+
+      // Update local state: Toggle the star status
+      setStarredJobs((prev) => {
+        const updatedStarred = new Set(prev);
+        if (newStarStatus) {
+          updatedStarred.add(jobId); // Add to starred jobs
+        } else {
+          updatedStarred.delete(jobId); // Remove from starred jobs
+        }
+        return updatedStarred;
+      });
+    } catch (error) {
+      console.error('Error updating star status:', error);
+    }
   };
 
   const toggleJobSelection = (jobId) => {
@@ -135,7 +155,7 @@ const ManageJobs = () => {
       
       switch (action) {
         case 'delete':
-          endpoint = '/api/jobs/bulk-delete';
+          endpoint = '/api/jobs/delete-multiple';
           message = 'Selected jobs deleted successfully';
           break;
        
@@ -504,12 +524,13 @@ const ManageJobs = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end relative">
-                        <button 
-                          onClick={(e) => toggleStar(job._id, e)}
-                          className={`mr-2 ${starredJobs.has(job._id) ? 'text-yellow-400' : 'text-gray-400'} hover:scale-110 transition-transform`}
-                        >
-                          <Star className="h-5 w-5" />
-                        </button>
+                      <button
+                onClick={() =>
+                  toggleStar(job._id, starredJobs.has(job._id))
+                }
+              >
+                {starredJobs.has(job._id) ? '★' : '☆'} {/* Toggle Star Symbol */}
+              </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();

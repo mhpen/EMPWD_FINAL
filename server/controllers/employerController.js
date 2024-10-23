@@ -43,7 +43,7 @@ export const getEmployerById = async (req, res) => {
 
 // Create a new employer
 export const createEmployer = async (req, res) => {
-  const { basicInfo, locationInfo, companyInfo, contactPerson, jobPosting, pwdSupport } = req.body;
+  const { basicInfo, locationInfo, companyInfo, contactPerson, jobPosting, pwdSupport, role } = req.body;
 
   try {
     // Hash the password before saving
@@ -53,6 +53,7 @@ export const createEmployer = async (req, res) => {
     const newBasicInfo = new BasicInfo({
       ...basicInfo,
       password: hashedPassword,
+      role: role || 'employer'
     });
     const savedBasicInfo = await newBasicInfo.save();
 
