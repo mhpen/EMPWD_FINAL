@@ -11,7 +11,7 @@ import bcrypt from 'bcrypt'; // Import bcrypt for password hashing
 // Create a new job seeker
 export const createJobSeeker = async (req, res) => {
    try {
-     const { basicInfo, locationInfo, disabilityInfo, workPreferences, additionalInfo } = req.body;
+     const { basicInfo, locationInfo, disabilityInfo, workPreferences, additionalInfo, role } = req.body;
 
       // Hash the password before saving BasicInfo
       const hashedPassword = await bcrypt.hash(basicInfo.password, 10); // 10 is the salt rounds
@@ -19,16 +19,17 @@ export const createJobSeeker = async (req, res) => {
       // Replace the plain password with the hashed password
       const newBasicInfo = await BasicInfo.create({
          ...basicInfo,
-         password: hashedPassword // Store hashed password
+         password: hashedPassword, // Store hashed password
+         role: role || 'jobseeker'
       });
  
-     //const newBasicInfo = await BasicInfo.create(basicInfo);
-     const newLocationInfo = await LocationInfo.create(locationInfo);
-     const newDisabilityInfo = await DisabilityInfo.create(disabilityInfo);
-     const newWorkPreferences = await WorkPreferences.create(workPreferences);
-     const newAdditionalInfo = await JobSeekerAdditionalInfo.create(additionalInfo);
+      //const newBasicInfo = await BasicInfo.create(basicInfo);
+      const newLocationInfo = await LocationInfo.create(locationInfo);
+      const newDisabilityInfo = await DisabilityInfo.create(disabilityInfo);
+      const newWorkPreferences = await WorkPreferences.create(workPreferences);
+      const newAdditionalInfo = await JobSeekerAdditionalInfo.create(additionalInfo);
  
-     const newJobSeeker = await JobSeeker.create({
+      const newJobSeeker = await JobSeeker.create({
          basicInfo: newBasicInfo._id,
          locationInfo: newLocationInfo._id,
          disabilityInfo: newDisabilityInfo._id,
@@ -39,6 +40,7 @@ export const createJobSeeker = async (req, res) => {
       res.status(201).json(newJobSeeker);
    } catch (err) {
       res.status(400).json({ error: err.message });
+     
    }
 };
  

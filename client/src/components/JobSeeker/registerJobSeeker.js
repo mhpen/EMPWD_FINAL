@@ -19,6 +19,7 @@ const CreateJobSeeker = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      //role: 'jobseeker',
       country: '',
       city: '',
       postal: '',
@@ -169,6 +170,7 @@ const CreateJobSeeker = () => {
                lastName: formData.lastName,
                email: formData.email,
                password: formData.password,
+               //role: formData.role,
             },
             locationInfo: {
                country: formData.country,
@@ -190,6 +192,7 @@ const CreateJobSeeker = () => {
                resumeUrl: formData.resumeUrl
             }
          });
+         console.log(formData);
          console.log(response.data);
          alert('Employer created successfully!');
       } catch (error) {

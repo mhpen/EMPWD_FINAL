@@ -1,9 +1,7 @@
-// ManageJobs.jsx
-
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Star, MoreHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Star, MoreHorizontal, X, Archive, Trash2, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Alert, AlertDescription } from "../ui/alert.js";
 
 const ManageJobs = () => {
   const navigate = useNavigate();
@@ -11,23 +9,59 @@ const ManageJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('Open');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [starredJobs, setStarredJobs] = useState(new Set());
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedJobs, setSelectedJobs] = useState(new Set());
+  const [notification, setNotification] = useState(null);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [filters, setFilters] = useState({
-    jobTitle: '',
+    dateRange: 'all',
+    candidateCount: 'all',
+    location: 'all'
   });
 
+  // Define job statuses array
+  const jobStatuses = ['All', 'Open', 'Closed', 'Draft', 'Archived'];
+
+  // Refs for click outside
+  const dropdownRef = useRef(null);
+  const notificationTimeoutRef = useRef(null);
+
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Load starred jobs from localStorage
+    const savedStarredJobs = localStorage.getItem('starredJobs');
+    if (savedStarredJobs) {
+      setStarredJobs(new Set(JSON.parse(savedStarredJobs)));
+    }
+
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/jobs', {
-          params: {
-            status: selectedStatus,
-            jobTitle: filters.jobTitle,
-          },
-        });
-        setJobs(Array.isArray(response.data.jobs) ? response.data.jobs : []);
+        const response = await fetch('/api/jobs');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const jobsData = data.data || [];
+        setJobs(jobsData);
         setError(null);
       } catch (err) {
+        console.error(err);
         setError('Failed to load jobs');
       } finally {
         setLoading(false);
@@ -35,28 +69,297 @@ const ManageJobs = () => {
     };
 
     fetchJobs();
-  }, [selectedStatus, filters]);
+  }, []);
 
-  const handleStatusChange = (status) => {
-    setSelectedStatus(status);
-  };
+  // Save starred jobs to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('starredJobs', JSON.stringify([...starredJobs]));
+  }, [starredJobs]);
 
-  const handleFilterChange = (event) => {
-    const { name, value } = event.target;
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: value,
-    }));
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+
+    notificationTimeoutRef.current = setTimeout(() => {
+      setNotification(null);
+    }, 3000);
   };
 
   const handleAddJob = () => {
     navigate('/employers/create-job');
   };
 
-  const jobStatuses = ['Open', 'Closed', 'Pending'];
+  const toggleStar = (jobId, event) => {
+    event.stopPropagation();
+    setStarredJobs(prev => {
+      const newStarred = new Set(prev);
+      if (newStarred.has(jobId)) {
+        newStarred.delete(jobId);
+      } else {
+        newStarred.add(jobId);
+      }
+      return newStarred;
+    });
+  };
+
+  const toggleJobSelection = (jobId) => {
+    setSelectedJobs(prev => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(jobId)) {
+        newSelected.delete(jobId);
+      } else {
+        newSelected.add(jobId);
+      }
+      return newSelected;
+    });
+  };
+
+  const toggleAllJobs = (event) => {
+    if (event.target.checked) {
+      const allJobIds = filteredJobs.map(job => job._id);
+      setSelectedJobs(new Set(allJobIds));
+    } else {
+      setSelectedJobs(new Set());
+    }
+  };
+
+  const handleBulkAction = async (action) => {
+    const selectedJobIds = Array.from(selectedJobs);
+    
+    try {
+      let endpoint;
+      let message;
+      
+      switch (action) {
+        case 'delete':
+          endpoint = '/api/jobs/bulk-delete';
+          message = 'Selected jobs deleted successfully';
+          break;
+       
+        default:
+          return;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ jobIds: selectedJobIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} jobs`);
+      }
+
+      // Update local state based on action
+      if (action === 'delete') {
+        setJobs(prev => prev.filter(job => !selectedJobs.has(job._id)));
+      } 
+
+      setSelectedJobs(new Set());
+      showNotification(message);
+    } catch (err) {
+      console.error(err);
+      showNotification(`Failed to ${action} jobs`, 'error');
+    }
+  };
+
+  const handleActionClick = async (jobId, action) => {
+    switch (action) {
+      case 'view':
+        navigate(`/employers/view-job/${jobId}`);
+        break;
+      case 'edit':
+        navigate(`/employers/edit-job/${jobId}`);
+        break;
+      case 'delete':
+        if (window.confirm('Are you sure you want to delete this job?')) {
+          try {
+            const response = await fetch(`/api/jobs/delete-job/${jobId}`, {
+              method: 'DELETE',
+            });
+  
+            if (!response.ok) {
+              throw new Error('Failed to delete job');
+            }
+  
+            setJobs(prev => prev.filter(job => job._id !== jobId));
+            showNotification('Job deleted successfully');
+          } catch (err) {
+            console.error(err);
+            showNotification('Failed to delete job', 'error');
+          }
+        }
+        break;
+      case 'duplicate':
+        navigate(`/employers/create-job?duplicate=${jobId}`);
+        break;
+      default:
+        break;
+    }
+    setActiveDropdown(null);
+  };
+
+  const filteredJobs = jobs.filter(job => {
+    const matchesStatus = selectedStatus === 'All' || job.jobStatus === selectedStatus;
+    const matchesSearch = job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStarred = !showStarredOnly || starredJobs.has(job._id);
+    const matchesDateRange = filters.dateRange === 'all' || 
+      (filters.dateRange === 'week' && isWithinLastWeek(job.datePosted)) ||
+      (filters.dateRange === 'month' && isWithinLastMonth(job.datePosted));
+    const matchesCandidateCount = filters.candidateCount === 'all' ||
+      (filters.candidateCount === 'low' && job.candidatesCount < 10) ||
+      (filters.candidateCount === 'medium' && job.candidatesCount >= 10 && job.candidatesCount < 50) ||
+      (filters.candidateCount === 'high' && job.candidatesCount >= 50);
+    const matchesLocation = filters.location === 'all' || job.location === filters.location;
+
+    return matchesStatus && matchesSearch && matchesStarred && 
+           matchesDateRange && matchesCandidateCount && matchesLocation;
+  });
+
+  const isWithinLastWeek = (date) => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return new Date(date) >= weekAgo;
+  };
+
+  const isWithinLastMonth = (date) => {
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    return new Date(date) >= monthAgo;
+  };
+
+  const FilterModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">Filters</h3>
+          <button onClick={() => setShowFilters(false)}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-2">Date Posted</label>
+            <select 
+              className="w-full border rounded p-2"
+              value={filters.dateRange}
+              onChange={(e) => setFilters(prev => ({...prev, dateRange: e.target.value}))}
+            >
+              <option value="all">All Time</option>
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-2">Candidate Count</label>
+            <select 
+              className="w-full border rounded p-2"
+              value={filters.candidateCount}
+              onChange={(e) => setFilters(prev => ({...prev, candidateCount: e.target.value}))}
+            >
+              <option value="all">All</option>
+              <option value="low">&lt; 10 candidates</option>
+              <option value="medium">10-50 candidates</option>
+              <option value="high">&gt; 50 candidates</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-2">Location</label>
+            <select 
+              className="w-full border rounded p-2"
+              value={filters.location}
+              onChange={(e) => setFilters(prev => ({...prev, location: e.target.value}))}
+            >
+              <option value="all">All Locations</option>
+              <option value="remote">Remote</option>
+              <option value="onsite">On-site</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end space-x-2 mt-6">
+            <button 
+              className="px-4 py-2 border rounded"
+              onClick={() => {
+                setFilters({
+                  dateRange: 'all',
+                  candidateCount: 'all',
+                  location: 'all'
+                });
+              }}
+            >
+              Reset
+            </button>
+            <button 
+              className="px-4 py-2 bg-black text-white rounded"
+              onClick={() => setShowFilters(false)}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ActionsDropdown = ({ jobId }) => (
+    <div 
+      ref={dropdownRef}
+      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border"
+      style={{ transform: 'translateY(-50%)' }}
+    >
+      <div className="py-1">
+        <button
+          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          onClick={() => handleActionClick(jobId, 'view')}
+        >
+          View
+        </button>
+        <button
+          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          onClick={() => handleActionClick(jobId, 'edit')}
+        >
+          Edit
+        </button>
+        <button
+          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          onClick={() => handleActionClick(jobId, 'duplicate')}
+        >
+          Duplicate
+        </button>
+        <button
+          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+          onClick={() => handleActionClick(jobId, 'delete')}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen">
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50">
+          <Alert className={`${
+            notification.type === 'error' ? 'border-red-500' : 'border-green-500'
+          }`}>
+            <AlertDescription>
+              {notification.message}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="w-64 bg-gray-100 p-4">
         <div className="flex flex-col">
@@ -78,7 +381,6 @@ const ManageJobs = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-8 bg-white">
-        {/* Header */}
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Jobs</h1>
           <div className="flex space-x-6">
@@ -88,46 +390,79 @@ const ManageJobs = () => {
           </div>
         </header>
 
-        {/* Filters and Add Job Button */}
         <div className="flex justify-between items-center mb-4">
           <div className="space-x-2">
             {jobStatuses.map((status) => (
               <button
                 key={status}
                 className={`px-4 py-2 border rounded ${selectedStatus === status ? 'bg-gray-200' : ''}`}
-                onClick={() => handleStatusChange(status)}
+                onClick={() => setSelectedStatus(status)}
               >
                 {status}
               </button>
             ))}
-            <Star className="inline-block h-5 w-5" />
           </div>
           <div className="flex space-x-2 items-center">
-            <input
-              type="text"
-              placeholder="Search"
+            <button
+              className={`px-4 py-2 border rounded ${showStarredOnly ? 'bg-yellow-50' : ''}`}
+              onClick={() => setShowStarredOnly(!showStarredOnly)}
+            >
+              <Star className={`h-5 w-5 ${showStarredOnly ? 'text-yellow-400' : 'text-gray-400'}`} />
+            </button>
+            <div className="relative">
+              <Search className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                className="pl-10 border rounded px-4 py-2"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button 
               className="border rounded px-4 py-2"
-              name="jobTitle"
-              value={filters.jobTitle}
-              onChange={handleFilterChange}
-            />
-            <button className="border rounded px-4 py-2">Filters</button>
+              onClick={() => setShowFilters(true)}
+            >
+              Filters
+            </button>
           </div>
         </div>
 
-        {/* Job Listing Table */}
+        {selectedJobs.size > 0 && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-cetner justify-between">
+            <span className="text-sm text-gray-600">
+              {selectedJobs.size} {selectedJobs.size === 1 ? 'job' : 'jobs'} selected
+            </span>
+            <div className="space-x-2">
+              
+              <button
+                className="px-4 py-2 border rounded-md flex items-center space-x-2 text-red-600 hover:bg-red-50"
+                onClick={() => handleBulkAction('delete')}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete Selected</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gray-100 rounded-lg overflow-hidden shadow">
           <table className="w-full">
             <thead className="bg-gray-200">
               <tr>
-                <th className="p-4">
-                  <input type="checkbox" />
+                <th className="p-4 w-12">
+                  <input 
+                    type="checkbox"
+                    checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
+                    onChange={toggleAllJobs}
+                    className="rounded border-gray-300"
+                  />
                 </th>
                 <th className="text-left p-4">Job Title</th>
                 <th className="text-left p-4">Candidates</th>
                 <th className="text-left p-4">Date Posted</th>
                 <th className="text-left p-4">Job Status</th>
-                <th className="text-left p-4"></th>
+                <th className="text-left p-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -139,25 +474,53 @@ const ManageJobs = () => {
                 <tr>
                   <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
                 </tr>
-              ) : jobs.length === 0 ? (
+              ) : filteredJobs.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center p-4">No jobs found</td>
                 </tr>
               ) : (
-                jobs.map((job) => (
-                  <tr key={job._id} className="bg-white">
+                filteredJobs.map((job) => (
+                  <tr key={job._id} className="bg-white hover:bg-gray-50">
                     <td className="p-4">
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox"
+                        checked={selectedJobs.has(job._id)}
+                        onChange={() => toggleJobSelection(job._id)}
+                        className="rounded border-gray-300"
+                      />
                     </td>
                     <td className="p-4">{job.jobTitle}</td>
                     <td className="p-4">{job.candidatesCount || 'N/A'}</td>
                     <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
                     <td className="p-4">
-                      <span className="px-4 py-2 border rounded">{job.jobStatus}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        job.jobStatus === 'Open' ? 'bg-green-100 text-green-800' :
+                        job.jobStatus === 'Closed' ? 'bg-red-100 text-red-800' :
+                        job.jobStatus === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {job.jobStatus}
+                      </span>
                     </td>
-                    <td className="p-4 flex items-center">
-                      <Star className="h-5 w-5 mr-2" />
-                      <MoreHorizontal className="h-5 w-5 cursor-pointer" />
+                    <td className="p-4">
+                      <div className="flex items-center justify-end relative">
+                        <button 
+                          onClick={(e) => toggleStar(job._id, e)}
+                          className={`mr-2 ${starredJobs.has(job._id) ? 'text-yellow-400' : 'text-gray-400'} hover:scale-110 transition-transform`}
+                        >
+                          <Star className="h-5 w-5" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdown(activeDropdown === job._id ? null : job._id);
+                          }}
+                          className="hover:bg-gray-100 p-1 rounded-full"
+                        >
+                          <MoreHorizontal className="h-5 w-5 cursor-pointer" />
+                        </button>
+                        {activeDropdown === job._id && <ActionsDropdown jobId={job._id} />}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -166,6 +529,8 @@ const ManageJobs = () => {
           </table>
         </div>
       </div>
+
+      {showFilters && <FilterModal />}
     </div>
   );
 };
