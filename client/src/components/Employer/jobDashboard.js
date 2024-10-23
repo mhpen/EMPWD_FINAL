@@ -179,4 +179,3 @@ const ManageJobs = () => {
 };
 
 export default ManageJobs;
-r
