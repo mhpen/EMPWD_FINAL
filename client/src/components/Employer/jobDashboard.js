@@ -1,145 +1,182 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+// ManageJobs.jsx
+
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Star, MoreHorizontal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import 'tailwindcss/tailwind.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const JobsDashboard = () => {
-    const [jobPostings, setJobPostings] = useState([]);
-    const [menuOpen, setMenuOpen] = useState(null); // Store currently selected job index
-    const navigate = useNavigate(); // Initialize useNavigate
+const ManageJobs = () => {
+  const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('Open');
+  const [filters, setFilters] = useState({
+    jobTitle: '',
+  });
 
-    useEffect(() => {
-        const fetchJobPostings = async () => {
-            try {
-                const response = await axios.get('/api/job-postings'); // Adjust the endpoint as needed
-                setJobPostings(response.data);
-            } catch (error) {
-                console.error('Error fetching job postings:', error);
-            }
-        };
-
-        fetchJobPostings();
-    }, []);
-
-    const toggleMenu = (index) => {
-        // Toggle the menu for the clicked job
-        setMenuOpen(menuOpen === index ? null : index);
+  useEffect(() => {
+    // Fetch jobs data from the server based on status and filters
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/jobs', {
+          params: {
+            status: selectedStatus,
+            jobTitle: filters.jobTitle,
+          },
+        });
+        setJobs(response.data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load jobs');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleOptionClick = async (action) => {
-        if (action === 'view') {
-            console.log('View job:', jobPostings[menuOpen]);
-        } else if (action === 'edit') {
-            console.log('Edit job:', jobPostings[menuOpen]);
-        } else if (action === 'delete') {
-            const jobId = jobPostings[menuOpen]._id; // Adjust based on your data structure
-            const confirmDelete = window.confirm('Are you sure you want to delete this job posting?');
-            if (confirmDelete) {
-                await deleteJob(jobId);
-            }
-        }
-        // Close the menu after action
-        setMenuOpen(null);
-    };
+    fetchJobs();
+  }, [selectedStatus, filters]);
 
-    const deleteJob = async (id) => {
-        try {
-            await axios.delete(`/api/delete-job/${id}`); // Update the endpoint if necessary
-            setJobPostings(jobPostings.filter(job => job._id !== id)); // Update local state
-        } catch (error) {
-            console.error('Error deleting job:', error);
-        }
-    };
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status);
+  };
 
-    return (
-        <div className="flex flex-col md:flex-row h-screen">
-            <aside className={`w-full md:w-1/5 bg-white border-r border-gray-300 p-4 ${menuOpen ? 'block' : 'hidden'} md:block`}>
-                <div className="absolute top-0 left-0 m-4">
-                    <i className="fas fa-cube text-2xl"></i>
-                    <span className="ml-2 text-xl font-semibold">photo</span>
-                </div>
-                <nav className="mt-16">
-                    <ul>
-                        <li className="mb-4"><a href="#" className="text-black">Dashboard Overview</a></li>
-                        <hr className="border-gray-300 mb-4" />
-                        <li className="mb-4"><a href="#" className="text-black">Job Management</a></li>
-                        <hr className="border-gray-300 mb-4" />
-                        <li className="mb-4"><a href="#" className="text-black">User Management</a></li>
-                        <hr className="border-gray-300 mb-4" />
-                    </ul>
-                </nav>
-            </aside>
-            <main className="flex-1 p-4 md:p-8">
-                <header className="mb-8">
-                    <div className="flex justify-between items-center mb-2">
-                        <button className="md:hidden text-black" onClick={() => setMenuOpen(!menuOpen)}>
-                            <i className="fas fa-bars"></i>
-                        </button>
-                        <div className="flex items-center space-x-4 md:ml-auto">
-                            <a href="#" className="text-black hidden md:block">Notifications</a>
-                            <a href="#" className="text-black hidden md:block">Settings</a>
-                            <a href="#" className="text-black md:hidden"><i className="fas fa-bell"></i></a>
-                            <a href="#" className="text-black md:hidden"><i className="fas fa-cog"></i></a>
-                            <div className="flex items-center">
-                                <span className="text-black mr-2">Roberto</span>
-                                <div className="w-8 h-8 bg-black rounded-full"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <hr className="border-gray-300 mb-4" />
-                </header>
-                <div className="p-4 md:p-8">
-                    <div className="flex justify-between items-center mb-2">
-                        <h1 className="text-2xl md:text-3xl font-bold">Job Management System</h1>
-                        <button 
-                            className="bg-black text-white px-2 py-1 md:px-4 md:py-2 text-xs md:text-base" 
-                            onClick={() => navigate('/create-job')} // Navigate to Add Job page
-                        >
-                            Add Job
-                        </button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-xs md:text-base">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-left">Job Title</th>
-                                    <th className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-left">Industry</th>
-                                    <th className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-left">Date</th>
-                                    <th className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-left">Job Status</th>
-                                    <th className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-left"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {jobPostings.map((job, index) => (
-                                    <tr key={job._id}> {/* Use a unique identifier for the key */}
-                                        <td className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2">{job.jobTitle}</td>
-                                        <td className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2">{job.industry}</td>
-                                        <td className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2">{new Date(job.createdAt).toLocaleDateString()}</td>
-                                        <td className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2">
-                                            <button className="border border-black px-2 py-1 md:px-4 md:py-2 text-xs md:text-base">Review</button>
-                                        </td>
-                                        <td className="border-b border-gray-300 px-2 py-1 md:px-4 md:py-2 text-center">
-                                            <button onClick={() => toggleMenu(index)} className="text-black">
-                                                <i className="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            {menuOpen === index && (
-                                                <div className="absolute bg-white border border-gray-300 p-2 rounded-md shadow-md">
-                                                    <button onClick={() => handleOptionClick('view')} className="block text-left text-black">View</button>
-                                                    <button onClick={() => handleOptionClick('edit')} className="block text-left text-black">Edit</button>
-                                                    <button onClick={() => handleOptionClick('delete')} className="block text-left text-red-500">Delete</button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [name]: value,
+    }));
+  };
+
+  const handleAddJob = () => {
+    navigate('/employers/create-job');
+  };
+
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-100 p-4">
+        <div className="flex flex-col">
+          <div className="mb-4 font-bold text-lg">LOGO</div>
+          <button
+            className="flex items-center justify-between bg-black text-white px-4 py-2 rounded mb-4"
+            onClick={handleAddJob}
+          >
+            <span>Create Jobs</span>
+            <Plus className="h-4 w-4" />
+          </button>
+          <nav className="space-y-4">
+            <button className="w-full text-left">Jobs</button>
+            <button className="w-full text-left">Interviews</button>
+            <button className="w-full text-left">Candidates</button>
+          </nav>
         </div>
-    );
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 p-8 bg-white">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Jobs</h1>
+          <div className="flex space-x-6">
+            <button className="text-gray-500">Notifications</button>
+            <button className="text-gray-500">Messages</button>
+            <div className="w-10 h-10 bg-black rounded-full"></div>
+          </div>
+        </header>
+
+        {/* Filters and Add Job Button */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="space-x-2">
+            <button
+              className={`px-4 py-2 border rounded ${selectedStatus === 'Open' ? 'bg-gray-200' : ''}`}
+              onClick={() => handleStatusChange('Open')}
+            >
+              Open
+            </button>
+            <button
+              className={`px-4 py-2 border rounded ${selectedStatus === 'Closed' ? 'bg-gray-200' : ''}`}
+              onClick={() => handleStatusChange('Closed')}
+            >
+              Closed
+            </button>
+            <button
+              className={`px-4 py-2 border rounded ${selectedStatus === 'Pending' ? 'bg-gray-200' : ''}`}
+              onClick={() => handleStatusChange('Pending')}
+            >
+              Pending
+            </button>
+            <Star className="inline-block h-5 w-5" />
+          </div>
+          <div className="flex space-x-2 items-center">
+            <input
+              type="text"
+              placeholder="Search"
+              className="border rounded px-4 py-2"
+              name="jobTitle"
+              value={filters.jobTitle}
+              onChange={handleFilterChange}
+            />
+            <button className="border rounded px-4 py-2">Filters</button>
+          </div>
+        </div>
+
+        {/* Job Listing Table */}
+        <div className="bg-gray-100 rounded-lg overflow-hidden shadow">
+          <table className="w-full">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="p-4">
+                  <input type="checkbox" />
+                </th>
+                <th className="text-left p-4">Job Title</th>
+                <th className="text-left p-4">Candidates</th>
+                <th className="text-left p-4">Date Posted</th>
+                <th className="text-left p-4">Job Status</th>
+                <th className="text-left p-4"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4">Loading...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
+                </tr>
+              ) : jobs.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4">No jobs found</td>
+                </tr>
+              ) : (
+                jobs.map((job) => (
+                  <tr key={job._id} className="bg-white">
+                    <td className="p-4">
+                      <input type="checkbox" />
+                    </td>
+                    <td className="p-4">{job.jobTitle}</td>
+                    <td className="p-4">{job.candidatesCount}</td>
+                    <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
+                    <td className="p-4">
+                      <span className="px-4 py-2 border rounded">{job.jobStatus}</span>
+                    </td>
+                    <td className="p-4 flex items-center">
+                      <Star className="h-5 w-5 mr-2" />
+                      <MoreHorizontal className="h-5 w-5 cursor-pointer" />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default JobsDashboard;
+export default ManageJobs;
+r

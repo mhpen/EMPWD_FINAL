@@ -104,3 +104,5 @@ export {
   JobSeeker,
   Employer
 };
+
+export default JobSeeker;  

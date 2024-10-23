@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { Link } from "react-router-dom";
 
 const Login = () => {
 
@@ -8,8 +9,8 @@ const Login = () => {
       password: ''
    })
 
-   const [error, setError] = useState(null);
-   const [success, setSuccess] = useState(null);
+   const [ setError] = useState(null);
+   const [ setSuccess] = useState(null);
 
    const handleChange = (e) => {
       const { name, value } = e.target;
@@ -71,9 +72,7 @@ const Login = () => {
                 <input type="checkbox" className="form-checkbox" />
                 <span className="ml-2 text-gray-600">Remember me</span>
               </label>
-              <a href="#" className="text-gray-600">
-                Forgot Password?
-              </a>
+            <Link> Forgot Password? </Link>
             </div>
             <button type="submit" className="w-full bg-black text-white py-2 rounded-lg font-semibold">
               SIGN IN
@@ -82,9 +81,7 @@ const Login = () => {
           <div className="text-center mt-6">
             <p className="text-gray-600">
               Not registered yet?{" "}
-              <a href="#" className="text-blue-600">
-                Create account
-              </a>
+              <Link to="/user-type" className="text-blue-600">Create account</Link>
             </p>
           </div>
           <div className="flex items-center my-6">

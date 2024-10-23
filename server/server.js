@@ -8,6 +8,7 @@ import employerRoutes from './routes/userRoutes/employerRoutes/employerRoute.js'
 import jobSeekerRoutes from './routes/userRoutes/jobSeekerRoutes/jobSeekerRoutes.js';
 import jobRoutes from './routes/jobRoute.js';
 import loginRoutes from './routes/loginRoutes.js'; // Login route
+import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js'
 dotenv.config();
 
 const app = express();
@@ -49,8 +50,9 @@ app.use((err, req, res, next) => {
 // Route handlers
 app.use('/api/employers', employerRoutes); 
 app.use('/api/jobSeekers', jobSeekerRoutes);
-app.use('/api/jobs', jobRoutes);
+app.use('/api/jobs', jobRoutes); // This line should be present
 app.use('/api/auth', loginRoutes); // Login route
+app.use('/api/jobapplications', jobApplicationRoutes) // application route
 
 
 // Test POST route

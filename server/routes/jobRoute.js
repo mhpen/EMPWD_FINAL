@@ -3,9 +3,9 @@ import express from 'express';
 import {
   createJob,
   updateJobPosting,
-  getAllJobPostings,
+  getJobs,
   getJobPostingById,
-  deleteJobPosting
+  deleteJob
 } from '../controllers/jobController.js';
 
 const router = express.Router();
@@ -16,13 +16,13 @@ router.post('/create', createJob);
 // PUT route to update a job posting by ID
 router.put('/update/:id', updateJobPosting);
 
-// GET route to retrieve all job postings with pagination
-router.get('/', getAllJobPostings);
-
 // GET route to retrieve a job posting by ID
 router.get('/:id', getJobPostingById);
 
-// DELETE route to delete a job posting by ID
-router.delete('/delete/:id', deleteJobPosting);
+// GET route for fetching all jobs
+router.get('/', getJobs);  // Make sure this line exists
+
+// DELETE route for removing jobs
+router.delete('/delete-job/:id', deleteJob);
 
 export default router;

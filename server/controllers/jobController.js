@@ -14,7 +14,6 @@ export const createJob = async (req, res) => {
   }
 };
 
-
 // Update job posting
 export const updateJobPosting = async (req, res) => {
   try {
@@ -50,27 +49,123 @@ export const updateJobPosting = async (req, res) => {
   }
 };
 
-export const getAllJobPostings = async (req, res) => {
+// Enhanced get all jobs with filtering, sorting, and pagination
+export const getJobs = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    // Destructure query parameters with defaults
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      order = 'desc',
+      jobTitle = '',
+      location = '',
+      industry = '',
+      employmentType = '',
+      salaryMin,
+      salaryMax,
+      status,
+      category
+    } = req.query;
 
-    const jobPostings = await Job.find()
+    // Build filter object
+    const filter = {};
+    
+    // Title search
+    if (jobTitle) {
+      filter.jobTitle = { $regex: jobTitle, $options: 'i' };
+    }
+    
+    // Location search
+    if (location) {
+      filter.jobLocation = { $regex: location, $options: 'i' };
+    }
+
+    // Industry filter
+    if (industry) {
+      filter.industry = industry;
+    }
+
+    // Employment type filter
+    if (employmentType) {
+      filter.employmentType = employmentType;
+    }
+
+    // Salary range filter
+    if (salaryMin || salaryMax) {
+      filter.salaryMax = filter.salaryMax || {};
+      filter.salaryMin = filter.salaryMin || {};
+
+      if (salaryMin) {
+        filter.salaryMax.$gte = Number(salaryMin);
+      }
+      if (salaryMax) {
+        filter.salaryMin.$lte = Number(salaryMax);
+      }
+    }
+
+    // Other filters
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+
+    // Build sort object
+    const sortOrder = order === 'desc' ? -1 : 1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    // Calculate skip value for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Execute query with filters, sorting, and pagination
+    const jobs = await Job.find(filter)
+      .sort(sortOptions)
       .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      .limit(parseInt(limit))
+      .lean();
 
-    const total = await Job.countDocuments();
+    // Get total count for pagination
+    const total = await Job.countDocuments(filter);
 
+    // Get unique values for dropdowns
+    const uniqueIndustries = await Job.distinct('industry');
+    const uniqueEmploymentTypes = await Job.distinct('employmentType');
+    const salaryStats = await Job.aggregate([
+      {
+        $group: {
+          _id: null,
+          minSalary: { $min: '$salaryMin' },
+          maxSalary: { $max: '$salaryMax' }
+        }
+      }
+    ]);
+
+    // Return response
     res.status(200).json({
       success: true,
-      data: jobPostings,
+      data: jobs,
       pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
         totalRecords: total,
-        recordsPerPage: limit
+        recordsPerPage: parseInt(limit)
+      },
+      filters: {
+        jobTitle,
+        location,
+        industry,
+        employmentType,
+        salaryMin,
+        salaryMax,
+        status,
+        category
+      },
+      filterOptions: {
+        industries: uniqueIndustries,
+        employmentTypes: uniqueEmploymentTypes,
+        salaryRange: salaryStats[0] || { minSalary: 0, maxSalary: 0 }
+      },
+      sorting: {
+        sortBy,
+        order
       }
     });
   } catch (error) {
@@ -81,50 +176,27 @@ export const getAllJobPostings = async (req, res) => {
   }
 };
 
-// Get job posting by ID
-export const getJobPostingById = async (req, res) => {
+// Delete job posting
+export const deleteJob = async (req, res) => {
+  const { id } = req.params;
   try {
-    const jobPosting = await Job.findById(req.params.id);
-    
-    if (!jobPosting) {
-      return res.status(404).json({
-        success: false,
-        error: 'Job posting not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: jobPosting
-    });
+    const deletedJob = await Job.findByIdAndDelete(id);
+    if (!deletedJob) return res.status(404).json({ message: 'Job not found' });
+    res.status(200).json({ message: 'Job deleted successfully', job: deletedJob });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error deleting job', error });
   }
 };
 
-// Delete job posting
-export const deleteJobPosting = async (req, res) => {
+export const getJobPostingById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const deletedJob = await Job.findByIdAndDelete(req.params.id);
-
-    if (!deletedJob) {
-      return res.status(404).json({
-        success: false,
-        error: 'Job posting not found'
-      });
+    const jobPosting = await Job.findById(id);
+    if (!jobPosting) {
+      return res.status(404).json({ message: 'Job posting not found' });
     }
-
-    res.status(200).json({
-      success: true,
-      message: 'Job posting deleted successfully'
-    });
+    res.status(200).json({ success: true, data: jobPosting });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
