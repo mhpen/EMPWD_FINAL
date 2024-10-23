@@ -2,7 +2,11 @@ import Job from '../models/job.js';
 
 // Create a new job posting
 export const createJob = async (req, res) => {
-  const jobData = req.body;
+  const jobData = {
+    ...req.body,
+    jobStatus: req.body.jobStatus || 'pending', // Default to 'pending'
+    isStarred: req.body.isStarred || false      // Default to false
+  };
 
   try {
     const newJob = new Job(jobData);
@@ -64,7 +68,7 @@ export const getJobs = async (req, res) => {
       employmentType = '',
       salaryMin,
       salaryMax,
-      status,
+      jobStatus, // Change from `status` to `jobStatus` for consistency
       category
     } = req.query;
 
@@ -105,7 +109,7 @@ export const getJobs = async (req, res) => {
     }
 
     // Other filters
-    if (status) filter.status = status;
+    if (jobStatus) filter.jobStatus = jobStatus;
     if (category) filter.category = category;
 
     // Build sort object
@@ -155,7 +159,7 @@ export const getJobs = async (req, res) => {
         employmentType,
         salaryMin,
         salaryMax,
-        status,
+        jobStatus, // Changed from `status`
         category
       },
       filterOptions: {

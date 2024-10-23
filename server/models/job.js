@@ -17,6 +17,8 @@ const jobSchema = new mongoose.Schema({
   additionalPerks: { type: String, default: '' },
   accessibilityFeatures: { type: [String], default: [] },
   specialAccommodations: { type: String, default: '' },
+  jobStatus: { type: String, default: 'pending' },  // Default value set to "pending"
+  isStarred: { type: Boolean, default: false }  // Default value set to false
 }, { timestamps: true });
 
 const Job = mongoose.model('Job', jobSchema);

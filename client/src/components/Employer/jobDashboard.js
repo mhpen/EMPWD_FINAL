@@ -16,7 +16,6 @@ const ManageJobs = () => {
   });
 
   useEffect(() => {
-    // Fetch jobs data from the server based on status and filters
     const fetchJobs = async () => {
       try {
         setLoading(true);
@@ -26,7 +25,7 @@ const ManageJobs = () => {
             jobTitle: filters.jobTitle,
           },
         });
-        setJobs(response.data);
+        setJobs(Array.isArray(response.data.jobs) ? response.data.jobs : []);
         setError(null);
       } catch (err) {
         setError('Failed to load jobs');
@@ -53,6 +52,8 @@ const ManageJobs = () => {
   const handleAddJob = () => {
     navigate('/employers/create-job');
   };
+
+  const jobStatuses = ['Open', 'Closed', 'Pending'];
 
   return (
     <div className="flex h-screen">
@@ -90,24 +91,15 @@ const ManageJobs = () => {
         {/* Filters and Add Job Button */}
         <div className="flex justify-between items-center mb-4">
           <div className="space-x-2">
-            <button
-              className={`px-4 py-2 border rounded ${selectedStatus === 'Open' ? 'bg-gray-200' : ''}`}
-              onClick={() => handleStatusChange('Open')}
-            >
-              Open
-            </button>
-            <button
-              className={`px-4 py-2 border rounded ${selectedStatus === 'Closed' ? 'bg-gray-200' : ''}`}
-              onClick={() => handleStatusChange('Closed')}
-            >
-              Closed
-            </button>
-            <button
-              className={`px-4 py-2 border rounded ${selectedStatus === 'Pending' ? 'bg-gray-200' : ''}`}
-              onClick={() => handleStatusChange('Pending')}
-            >
-              Pending
-            </button>
+            {jobStatuses.map((status) => (
+              <button
+                key={status}
+                className={`px-4 py-2 border rounded ${selectedStatus === status ? 'bg-gray-200' : ''}`}
+                onClick={() => handleStatusChange(status)}
+              >
+                {status}
+              </button>
+            ))}
             <Star className="inline-block h-5 w-5" />
           </div>
           <div className="flex space-x-2 items-center">
@@ -158,7 +150,7 @@ const ManageJobs = () => {
                       <input type="checkbox" />
                     </td>
                     <td className="p-4">{job.jobTitle}</td>
-                    <td className="p-4">{job.candidatesCount}</td>
+                    <td className="p-4">{job.candidatesCount || 'N/A'}</td>
                     <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
                     <td className="p-4">
                       <span className="px-4 py-2 border rounded">{job.jobStatus}</span>
