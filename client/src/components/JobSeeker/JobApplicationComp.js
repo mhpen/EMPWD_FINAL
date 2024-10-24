@@ -7,6 +7,21 @@ const steps = [
 ];
 
 const JobApplication = () => {
+
+   const userId = localStorage.getItem('userId');
+   // console.log(userId);
+   axios.get(`/api/jobseekers/user`, {
+      headers: {
+        'x-user-id': userId
+      }
+   })
+   .then(response => {
+        console.log(response.data); // Job seeker data
+   })
+   .catch(error => console.error('Error fetching user data:', error));
+
+
+
    const [step, setStep] = useState(1);
    const [personalInfo, setPersonalInfo] = useState({
       fullName: '',

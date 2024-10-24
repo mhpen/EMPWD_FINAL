@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 // ----------------------------- Import routes -----------------------------
 import employerRoutes from './routes/userRoutes/employerRoutes/employerRoute.js';
@@ -9,7 +10,8 @@ import jobSeekerRoutes from './routes/userRoutes/jobSeekerRoutes/jobSeekerRoutes
 import jobRoutes from './routes/jobRoute.js';
 import loginRoutes from './routes/loginRoutes.js'; // Login route
 import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js'
-import authMiddleware from './controllers/MiddleWare/authMiddlewareControl.js';
+import authMiddleware from './MiddleWare/authMiddlewareControl.js';
+import authRoutes from './routes/auth.js';
 
 dotenv.config();
 
@@ -17,8 +19,12 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-
+app.use(cors({
+  origin: 'http://localhost:3000', // Your frontend URL
+  credentials: true
+}));
+app.use(cookieParser());
+app.use(express.json());
 // MongoDB connection
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
@@ -48,13 +54,14 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
- 
+app.use('/api/auth', authRoutes);
 // Route handlers
 app.use('/api/employers', employerRoutes); 
 app.use('/api/jobSeekers', jobSeekerRoutes);
 app.use('/api/jobs', jobRoutes); // This line should be present
 app.use('/api/auth', loginRoutes); // Login route
 app.use('/api/jobapplications', authMiddleware, jobApplicationRoutes) // application route
+//app.use('api/jobseekers/user', getJobSeekerById)
 
 
 // Test POST route

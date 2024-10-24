@@ -11,6 +11,7 @@ import JobDetails from './components/JobSeeker/JobDetails'; // You'll need to cr
 import JobApplication from './components/JobSeeker/JobApplicationComp';
 import ViewJob from './components/Employer/viewJob';
 import EditJob from './components/Employer/editJob.js';
+import DebugManageJobs from './components/debugComponent.js';
 const App = () => {
   return (
     <Router>
@@ -21,6 +22,8 @@ const App = () => {
           <Route path="/jobs" element={<JobBoard />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/employers/view-job/:jobId" element={<ViewJob />} />
+          <Route path="/debug" element={<DebugManageJobs />} />
+
           <Route path = "/employers/edit-job/:jobId" element = {<EditJob/>} />
           {/* Existing routes */}
           <Route path="/job-application" element={<JobApplication/>} />

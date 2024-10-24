@@ -30,6 +30,7 @@ const CreateJobPosting = () => {
       [name]: value,
     }));
   };
+  const userId = localStorage.getItem('userId');
 
   const handleArrayChange = (e, field) => {
     const { value } = e.target;
@@ -43,6 +44,7 @@ const CreateJobPosting = () => {
   
     // Prepare the data according to the schema
     const jobData = {
+      employersId: userId, // Include userId in the jobData
       jobTitle: formData.jobTitle,
       jobDescription: formData.jobDescription,
       jobLocation: formData.jobLocation,
@@ -66,6 +68,7 @@ const CreateJobPosting = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(jobData),
       });

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const JobBoard = () => {
   
   // Get the userId in local storage or state
   const userId = localStorage.getItem('userId'); 
-  const userRole = localStorage.getItem('userRole');
-  console.log("User ID:", userId);
-  console.log("Role: ", userRole)
+  //const userRole = localStorage.getItem('userRole');
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // Add this line to use navigation
+  console.log("User ID:", userId);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

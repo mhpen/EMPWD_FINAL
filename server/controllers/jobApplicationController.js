@@ -2,6 +2,7 @@ import JobApplication from '../models/jobApplicationModel.js';
 import JobSeeker from '../models/userModel.js';
 
 
+
 // Create a new job application based on JobSeeker ID
 const createJobApplication = async (req, res) => {
     try {
