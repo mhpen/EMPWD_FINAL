@@ -9,6 +9,8 @@ import jobSeekerRoutes from './routes/userRoutes/jobSeekerRoutes/jobSeekerRoutes
 import jobRoutes from './routes/jobRoute.js';
 import loginRoutes from './routes/loginRoutes.js'; // Login route
 import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js'
+import authMiddleware from './controllers/MiddleWare/authMiddlewareControl.js';
+
 dotenv.config();
 
 const app = express();
@@ -52,7 +54,7 @@ app.use('/api/employers', employerRoutes);
 app.use('/api/jobSeekers', jobSeekerRoutes);
 app.use('/api/jobs', jobRoutes); // This line should be present
 app.use('/api/auth', loginRoutes); // Login route
-app.use('/api/jobapplications', jobApplicationRoutes) // application route
+app.use('/api/jobapplications', authMiddleware, jobApplicationRoutes) // application route
 
 
 // Test POST route

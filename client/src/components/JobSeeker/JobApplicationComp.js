@@ -105,7 +105,7 @@ const JobApplication = () => {
       };
 
       try {
-         const response = await axios.post('/api/jobapplications', jobApplicationData);
+         const response = await axios.post('/api/jobapplications/create', jobApplicationData);
          console.log('Job Application Submitted:', response.data);
          alert('Job Application Submitted');
          console.log({ personalInfo, jobPreferences, workHistory, resume });

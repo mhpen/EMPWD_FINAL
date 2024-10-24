@@ -5,15 +5,22 @@ import JobSeeker from '../models/userModel.js';
 // Create a new job application based on JobSeeker ID
 const createJobApplication = async (req, res) => {
     try {
-        const { _id, phoneNumber, jobPreferences, workHistory, resume, applicationStatus } = req.body;
+        const { phoneNumber, jobPreferences, workHistory, resume, applicationStatus } = req.body;
+
+        //get the userID in session or local storage
+        //const userId = localStorage.getItem('userId'); 
+
+        // req.user now contains the logged-in user's ID
+        const userId = req.user;
 
         //  Find the JobSeeker by ID
-        //  const jobSeeker = await JobSeeker.findById(_id);
-        //  if (!jobSeeker) {
-        //      return res.status(404).json({ message: 'JobSeeker not found' });
+        const jobSeeker = await JobSeeker.findById(userId);
+
+        if (!jobSeeker) {
+            return res.status(404).json({ message: 'JobSeeker not found' });
             
-        //  }
-        const jobSeeker = '67175d4de5d5b20edc5b1622'
+        }
+        //const jobSeeker = userId;  
         console.log(jobSeeker);
 
         // Create a new JobApplication instance

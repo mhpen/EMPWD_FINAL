@@ -58,6 +58,12 @@ const ManageJobs = () => {
         }
         const data = await response.json();
         const jobsData = data.data || [];
+        
+        // Initialize starredJobs with jobs that have isStarred=true
+        const initialStarredJobs = new Set(
+          jobsData.filter(job => job.isStarred).map(job => job._id)
+        );
+        setStarredJobs(initialStarredJobs);
         setJobs(jobsData);
         setError(null);
       } catch (err) {
@@ -71,6 +77,9 @@ const ManageJobs = () => {
     fetchJobs();
   }, []);
 
+  const handleRowClick = (jobId) => {
+    navigate(`/employers/view-job/${jobId}`);
+  };
   // Save starred jobs to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('starredJobs', JSON.stringify([...starredJobs]));
@@ -215,15 +224,11 @@ const ManageJobs = () => {
           }
         }
         break;
-      case 'duplicate':
-        navigate(`/employers/create-job?duplicate=${jobId}`);
-        break;
       default:
         break;
     }
     setActiveDropdown(null);
   };
-
   const filteredJobs = jobs.filter(job => {
     const matchesStatus = selectedStatus === 'All' || job.jobStatus === selectedStatus;
     const matchesSearch = job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
@@ -329,7 +334,6 @@ const ManageJobs = () => {
       </div>
     </div>
   );
-
   const ActionsDropdown = ({ jobId }) => (
     <div 
       ref={dropdownRef}
@@ -350,12 +354,6 @@ const ManageJobs = () => {
           Edit
         </button>
         <button
-          className="w-full text-left px-4 py-2 hover:bg-gray-100"
-          onClick={() => handleActionClick(jobId, 'duplicate')}
-        >
-          Duplicate
-        </button>
-        <button
           className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
           onClick={() => handleActionClick(jobId, 'delete')}
         >
@@ -364,6 +362,7 @@ const ManageJobs = () => {
       </div>
     </div>
   );
+
 
   return (
     <div className="flex h-screen">
@@ -485,68 +484,77 @@ const ManageJobs = () => {
                 <th className="text-left p-4">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="6" className="text-center p-4">Loading...</td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
-                </tr>
-              ) : filteredJobs.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center p-4">No jobs found</td>
-                </tr>
-              ) : (
-                filteredJobs.map((job) => (
-                  <tr key={job._id} className="bg-white hover:bg-gray-50">
-                    <td className="p-4">
-                      <input 
-                        type="checkbox"
-                        checked={selectedJobs.has(job._id)}
-                        onChange={() => toggleJobSelection(job._id)}
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="p-4">{job.jobTitle}</td>
-                    <td className="p-4">{job.candidatesCount || 'N/A'}</td>
-                    <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        job.jobStatus === 'Open' ? 'bg-green-100 text-green-800' :
-                        job.jobStatus === 'Closed' ? 'bg-red-100 text-red-800' :
-                        job.jobStatus === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {job.jobStatus}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end relative">
-                      <button
-                onClick={() =>
-                  toggleStar(job._id, starredJobs.has(job._id))
-                }
+           
+  <tbody>
+    {loading ? (
+      <tr>
+        <td colSpan="6" className="text-center p-4">Loading...</td>
+      </tr>
+    ) : error ? (
+      <tr>
+        <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
+      </tr>
+    ) : filteredJobs.length === 0 ? (
+      <tr>
+        <td colSpan="6" className="text-center p-4">No jobs found</td>
+      </tr>
+    ) : (
+      filteredJobs.map((job) => (
+        <tr 
+          key={job._id} 
+          className="bg-white hover:bg-gray-50 cursor-pointer"
+          onClick={() => handleRowClick(job._id)}
+        >
+          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+            <input 
+              type="checkbox"
+              checked={selectedJobs.has(job._id)}
+              onChange={() => toggleJobSelection(job._id)}
+              className="rounded border-gray-300"
+            />
+          </td>
+          <td className="p-4">{job.jobTitle}</td>
+          <td className="p-4">{job.candidatesCount || 'N/A'}</td>
+          <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
+          <td className="p-4">
+            <span className={`px-3 py-1 rounded-full text-sm ${
+              job.jobStatus === 'Open' ? 'bg-green-100 text-green-800' :
+              job.jobStatus === 'Closed' ? 'bg-red-100 text-red-800' :
+              job.jobStatus === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {job.jobStatus}
+            </span>
+          </td>
+          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-end relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleStar(job._id, starredJobs.has(job._id));
+                }}
+                className="mr-2"
               >
-                {starredJobs.has(job._id) ? '★' : '☆'} {/* Toggle Star Symbol */}
+                <Star 
+                  className={`h-5 w-5 ${starredJobs.has(job._id) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} 
+                />
               </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveDropdown(activeDropdown === job._id ? null : job._id);
-                          }}
-                          className="hover:bg-gray-100 p-1 rounded-full"
-                        >
-                          <MoreHorizontal className="h-5 w-5 cursor-pointer" />
-                        </button>
-                        {activeDropdown === job._id && <ActionsDropdown jobId={job._id} />}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveDropdown(activeDropdown === job._id ? null : job._id);
+                }}
+                className="hover:bg-gray-100 p-1 rounded-full"
+              >
+                <MoreHorizontal className="h-5 w-5 cursor-pointer" />
+              </button>
+              {activeDropdown === job._id && <ActionsDropdown jobId={job._id} />}
+            </div>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
           </table>
         </div>
       </div>

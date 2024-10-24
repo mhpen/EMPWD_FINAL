@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 // Protected routes
-router.post('/', createJobApplication);
+router.post('/create', createJobApplication);
 router.get('/', getAllJobApplications);
 router.get('/:id', getJobApplicationById);
 router.put('/:id', updateJobApplication);

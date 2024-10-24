@@ -82,6 +82,8 @@ export const updateIsStarred = async (req, res) => {
     res.status(500).json({ message: 'Error updating isStarred status', error });
   }
 };
+
+
 // Enhanced get all jobs with filtering, sorting, and pagination
 export const getJobs = async (req, res) => {
   try {

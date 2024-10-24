@@ -10,7 +10,7 @@ import JobBoard from './components/JobSeeker/JobBoard.js'; // The job board we c
 import JobDetails from './components/JobSeeker/JobDetails'; // You'll need to create this
 import JobApplication from './components/JobSeeker/JobApplicationComp';
 import ViewJob from './components/Employer/viewJob';
-
+import EditJob from './components/Employer/editJob.js';
 const App = () => {
   return (
     <Router>
@@ -21,14 +21,14 @@ const App = () => {
           <Route path="/jobs" element={<JobBoard />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/employers/view-job/:jobId" element={<ViewJob />} />
-
+          <Route path = "/employers/edit-job/:jobId" element = {<EditJob/>} />
           {/* Existing routes */}
           <Route path="/job-application" element={<JobApplication/>} />
           <Route path="/create-employer" element={<CreateEmployer />} />
           <Route path="/RegisterjobSeeker" element={<CreateJobSeeker />} />
           <Route path="/job-dashboard" element={<JobsDashboard />} />
           <Route path="/" element={<Login />} />
-          <Route path="/create-job" element={<JobPostingForm />} />
+          <Route path="/employers/create-job" element={<JobPostingForm />} />
           <Route path="/user-type" element={<Usertype />} />
         </Routes>
       </div>
