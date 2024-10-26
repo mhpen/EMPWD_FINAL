@@ -39,26 +39,15 @@ const JobDetails = () => {
     fetchJobDetails();
   }, [id]);
 
-  const handleApply = async () => {
-    try {
-      const response = await fetch(`/api/jobs/${id}/apply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to apply for job');
-      }
-
-      alert('Successfully applied for the job!');
-    } catch (err) {
-      console.error('Error applying for job:', err);
-      alert('Failed to apply for job. Please try again.');
-    }
+  const handleApply = () => {
+    navigate(`/jobs/${id}/apply`, { 
+      state: { 
+        jobId: id,
+        jobTitle: job.jobTitle,
+        company: job.company 
+      } 
+    });
   };
-
   const handleSaveJob = async () => {
     try {
       const response = await fetch(`/api/jobs/${id}/save`, {

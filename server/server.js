@@ -14,6 +14,8 @@ import jobRoutes from './routes/jobRoute.js';
 import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js';
 import authRoutes from './routes/authRoutes.js'; 
 import jobForSeekerRoutes from './routes/jobForSeekerRoutes.js';
+//import jobRouterSeeker from './routes/jobRoutesSeeker.js'
+import seekerProfileRoutes from './routes/userRoutes/jobSeekerRoutes/seekerProfileRoutes.js';
 
 dotenv.config();
 
@@ -58,7 +60,9 @@ app.use('/api/employers', employerRoutes); // Employer-specific routes
 app.use('/api/jobSeekers', jobSeekerRoutes); // Job seeker-specific routes
 app.use('/api/jobs', jobRoutes); // Job listing and management routes
 app.use('/api/jobapplications', jobApplicationRoutes); // Job applications
-app.use('/api/jobs/seeker', jobForSeekerRoutes); // Job seeker routes for jobs
+//app.use('/api/jobs/seeker', jobRouterSeeker); // Job seeker routes for jobs
+app.use('/api/job', jobForSeekerRoutes); // Job seeker routes for jobs
+app.use('/api/seekers', seekerProfileRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

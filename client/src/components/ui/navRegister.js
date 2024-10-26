@@ -15,22 +15,23 @@ const NavRegister = ({ navStep }) => {
    
     <div>
       {/* Header Section */}
-      <div className="mt-7 w-full justify-between items-center flex flex-row">
-        <div>
-          <span className="ml-2 text-xl font-semibold">photo</span>
+      <div className="font-poppins p-4 ">
+        <div className="absolute top-2 left-10 m-4 flex items-center">
+          <i className="fas fa-cube text-2xl"></i>
+          <span className="ml-2 text-[28px] font-semibold">photo</span>
         </div>
-
-        <div className="flex flex-row" >
-          <span className="text-gray-600">Already have an account?</span>
-          <Link to="/" className="text-black font-bold ml-3">Login</Link>
+        <div className="absolute top-3 right-10 m-4 text-[15px]">
+          <span className="text-sm">
+            Already have an account?</span>
+            <Link to="/" className="text-black font-bold ml-2">Login</Link>
         </div>
       </div>
 
-      <div className="w-full p-4 flex flex-col sm:flex-row justify-between items-center">
+      <div className="w-full p-4 flex justify-between items-center">
         
-        {/* Progress Bar */}
-        <div className="w-full mx-auto p-4">
-          <div className="max-w-5xl w-full mx-auto p-4">
+         {/* Progress Bar */}
+         <div className="w-full mt-12 font-poppins text-[15px]">
+          <div className="max-w-5xl w-full mx-auto ">
             <div className="flex flex-wrap items-center justify-between mb-4">
               {steps.map((step, index) => {
                 const isCompleted = index + 1 < navStep;

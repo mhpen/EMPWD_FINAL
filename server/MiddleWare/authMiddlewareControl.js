@@ -11,6 +11,8 @@ export const authMiddleware = async (req, res, next) => {
         message: 'Authentication required' 
       });
     }
+    console.log('Cookies:', req.cookies);
+    console.log('Token:', token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     

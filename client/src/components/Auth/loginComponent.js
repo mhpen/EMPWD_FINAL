@@ -70,15 +70,15 @@ const Login = () => {
 
   return (
 
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen font-poppins mx-14 h-screen">
       <div className="flex flex-col md:flex-row rounded-lg overflow-hidden max-w-5xl w-full">
-        <div className="w-full md:w-1/2 p-8">
+        <div className="w-full md:w-1/2 p-8 mr-10">
           <div className="flex items-center mb-8">
             <i className="fas fa-cube text-2xl mr-2"></i>
-            <span className="text-2xl font-semibold">LOGO</span>
+            <span className="text-[20px] font-medium">EmpowerPWD</span>
           </div>
-          <h2 className="text-3xl font-semibold mb-2">Welcome Back!</h2>
-          <p className="text-gray-600 mb-8">Please enter your login details below</p>
+          <h2 className="font-semibold text-[26px] tracking-widest">Welcome Back!</h2>
+          <p className="text-black mb-8 text-[12px]">Please enter your login details below</p>
 
           <form onSubmit={handleSubmit}>
 
@@ -97,7 +97,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full px-4 py-2 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-[12px]"
               />
             </div>
               <div className="mb-4">
@@ -107,20 +107,20 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ocus:ring-blue-600"
+                  className="w-full px-4 py-2 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-[12px]"
                   />
                 </div>
                 <div className="flex items-center justify-between mb-6">
                   <label className="flex items-center">
-                    <input type="checkbox" className="form-checkbox" />
-                    <span className="ml-2 text-gray-600">Remember me</span>
+                    <input type="checkbox" className="form-checkbox accent-black" />
+                    <span className="ml-2 text-black text-[12px]">Remember me</span>
                   </label>
-                  <Link to="/forgot-password" className="text-blue-600">Forgot Password?</Link>
+                  <Link to="/forgot-password" className="text-black hover:underline text-[12px]">Forgot Password?</Link>
                 </div>
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full bg-black text-white py-2 rounded-3xl font-semibold"
+                  className="w-full bg-black text-white py-2 rounded-3xl font-medium mt-1 text-[15px]"
                 >
                   {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
                 </button>
@@ -128,26 +128,26 @@ const Login = () => {
               <button 
                 onClick={handleLogout} 
                 disabled={isLoading} 
-                className="mt-4 w-full bg-red-600 text-white py-2 rounded-3xl font-semibold"
+                className="mt-2 w-full bg-gray-600 text-white py-2 rounded-3xl font-medium text-[15px]"
               >
                 {isLoading ? 'LOGGING OUT...' : 'LOGOUT'}
               </button>
-              <div className="text-center mt-6">
-                <p className="text-gray-600">
+              <div className="ml-6 mt-4 text-[12px]">
+                <p className="text-black">
                   Not registered yet?{" "}
-                  <Link to="/user-type" className="text-blue-600">Create account</Link>
+                  <Link to="/user-type" className="text-black hover:underline">Create account</Link>
                 </p>
               </div>
-              <div className="flex items-center my-6">
-                <hr className="flex-grow border-gray-300" />
-                <span className="mx-2 text-gray-400">OR</span>
-                <hr className="flex-grow border-gray-300" />
+              <div className="flex items-center ml-6 mt-7 mb-5">
+                <hr className="flex-grow border-black" />
+                <span className="mx-12 text-black text-[12px]">OR</span>
+                <hr className="flex-grow border-black" />
               </div>
               <div className="flex justify-center space-x-4">
-                <button className="flex items-center justify-center w-20 h-10 border rounded-lg">
+                <button className="flex items-center justify-center w-20 h-9 border border-black rounded-lg text-[14px]">
                   <i className="fas fa-cube mr-2"></i> LOGO
                 </button>
-                <button className="flex items-center justify-center w-20 h-10 border rounded-lg">
+                <button className="flex items-center justify-center w-20 h-9 border border-black rounded-lg text-[14px]">
                   <i className="fas fa-cube mr-2"></i> LOGO
                 </button>
               </div>

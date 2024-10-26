@@ -1,5 +1,7 @@
 import Job from '../models/Job.js';
 import mongoose from 'mongoose';
+
+// Create a new job posting
 export const createJob = async (req, res) => {
   try {
     const { 
@@ -127,6 +129,7 @@ export const updateJob = async (req, res) => {
     });
   }
 };
+
 
 export const updateJobStatus = async (req, res) => {
   try {

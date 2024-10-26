@@ -5,6 +5,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ['Poppins', 'sans-serif'],
+      },
+      fontSize: {
+        '15px': '15px', // Custom font size of 15px
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
