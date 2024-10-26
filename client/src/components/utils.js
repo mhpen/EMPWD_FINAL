@@ -1,5 +1,6 @@
-import { clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 
 /**
  * Merge class names with tailwind classes and handle conditional classes

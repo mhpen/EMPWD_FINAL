@@ -11,48 +11,48 @@ const EditJob = () => {
   const [formData, setFormData] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
   const educationLevels = ['High School', 'Bachelor\'s Degree', 'Master\'s Degree', 'PhD'];
   const experienceLevels = ['Entry Level', 'Mid Level', 'Senior Level'];
 
   useEffect(() => {
-    // Use the job data passed through navigation state if available
     if (location.state?.jobData) {
       setFormData(location.state.jobData);
     } else {
-      // Fallback to fetching data if not available in navigation state
-      const fetchJobData = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`/api/jobs/${jobId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to fetch job details');
-          }
-
-          const responseData = await response.json();
-          // Set the nested job data
-          setFormData(responseData.data);
-        } catch (error) {
-          setNotification({ type: 'error', message: 'Failed to fetch job details.' });
-          console.error('Error fetching job:', error);
-        }
-      };
-
       fetchJobData();
     }
   }, [jobId, location.state]);
 
-  // Return loading state if formData is not yet fetched
-  if (!formData) {
-    return <div>Loading...</div>;
-  }
+  const fetchJobData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch job details: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.success) {
+        setFormData(responseData.data);
+      } else {
+        throw new Error(responseData.error || 'Failed to fetch job details');
+      }
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'Failed to fetch job details'
+      });
+      console.error('Error fetching job:', error);
+    }
+  };
 
   const handleEdit = (field, value) => {
     setEditingField(field);
@@ -60,12 +60,15 @@ const EditJob = () => {
   };
 
   const handleSave = async (field) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       let newValue = tempValue;
 
       // Handle array fields
       if (field === 'keySkills' || field === 'benefits' || field === 'accessibilityFeatures') {
-        newValue = tempValue.split(',').map(item => item.trim());
+        newValue = tempValue.split(',').map(item => item.trim()).filter(Boolean);
       }
 
       // Format date for applicationDeadline
@@ -74,7 +77,7 @@ const EditJob = () => {
       }
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/jobs/${jobId}`, {
+      const response = await fetch(`/api/jobs/${jobId}/update`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -83,23 +86,35 @@ const EditJob = () => {
         body: JSON.stringify({ [field]: newValue }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to update job');
+        throw new Error(data.error || 'Failed to update job');
       }
 
-      setFormData(prev => ({
-        ...prev,
-        [field]: newValue
-      }));
-
-      setNotification({ type: 'success', message: 'Field updated successfully' });
+      if (data.success) {
+        setFormData(prev => ({
+          ...prev,
+          [field]: newValue
+        }));
+        setNotification({
+          type: 'success',
+          message: 'Field updated successfully'
+        });
+      } else {
+        throw new Error(data.error || 'Failed to update field');
+      }
     } catch (error) {
-      setNotification({ type: 'error', message: 'Failed to update field' });
+      setNotification({
+        type: 'error',
+        message: error.message || 'Failed to update field'
+      });
       console.error('Error updating job:', error);
+    } finally {
+      setIsSubmitting(false);
+      setEditingField(null);
+      setTempValue('');
     }
-
-    setEditingField(null);
-    setTempValue('');
   };
 
   const handleCancel = () => {
@@ -110,6 +125,25 @@ const EditJob = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
+
+  // Return loading state if formData is not yet fetched
+  if (!formData) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <div key={n} className="h-24 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderField = (label, field, value, type = 'text') => {
     const isEditing = editingField === field;
@@ -122,6 +156,7 @@ const EditJob = () => {
             <button
               onClick={() => handleEdit(field, value)}
               className="text-blue-600 hover:text-blue-800"
+              disabled={isSubmitting}
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -136,12 +171,14 @@ const EditJob = () => {
                 onChange={(e) => setTempValue(e.target.value)}
                 className="w-full border rounded p-2"
                 rows={4}
+                disabled={isSubmitting}
               />
             ) : type === 'select' ? (
               <select
                 value={tempValue}
                 onChange={(e) => setTempValue(e.target.value)}
                 className="w-full border rounded p-2"
+                disabled={isSubmitting}
               >
                 {field === 'employmentType' && employmentTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
@@ -156,9 +193,10 @@ const EditJob = () => {
             ) : type === 'date' ? (
               <input
                 type="date"
-                value={tempValue.split('T')[0]} // Format date for input
+                value={tempValue.split('T')[0]}
                 onChange={(e) => setTempValue(e.target.value)}
                 className="w-full border rounded p-2"
+                disabled={isSubmitting}
               />
             ) : (
               <input
@@ -166,17 +204,20 @@ const EditJob = () => {
                 value={tempValue}
                 onChange={(e) => setTempValue(e.target.value)}
                 className="w-full border rounded p-2"
+                disabled={isSubmitting}
               />
             )}
             <button
               onClick={() => handleSave(field)}
               className="p-2 text-green-600 hover:text-green-800"
+              disabled={isSubmitting}
             >
               <Check className="h-4 w-4" />
             </button>
             <button
               onClick={handleCancel}
               className="p-2 text-red-600 hover:text-red-800"
+              disabled={isSubmitting}
             >
               <X className="h-4 w-4" />
             </button>
@@ -252,7 +293,7 @@ const EditJob = () => {
             {renderField('Accessibility Features', 'accessibilityFeatures', formData.accessibilityFeatures)}
             {renderField('Special Accommodations', 'specialAccommodations', formData.specialAccommodations, 'textarea')}
           </div>
-        </div>
+        </div>wa
       </div>
     </div>
   );

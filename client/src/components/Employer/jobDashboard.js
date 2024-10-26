@@ -22,112 +22,77 @@ const ManageJobs = () => {
     location: 'all'
   });
 
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
-  const userRole = localStorage.getItem('userRole');
-
-  // Define job statuses array
   const jobStatuses = ['All', 'Open', 'Closed', 'Draft', 'Archived'];
-
-  // Refs for click outside
   const dropdownRef = useRef(null);
   const notificationTimeoutRef = useRef(null);
-  useEffect(() => {
-    if (!token || !userId || userRole !== 'employer') {
-      setError('Authentication required');
-      navigate('/');
-      return;
-    }
-  }, [token, userId, userRole, navigate]);
-  const getAuthData = () => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    const userRole = localStorage.getItem('userRole');
-    
-    // Validate token format
-    const isValidToken = token && typeof token === 'string' && token.trim().length > 0;
-    
-    return {
-      token: isValidToken ? token : null,
-      userId,
-      userRole,
-      isValid: isValidToken && userId && userRole === 'employer'
-    };
-  };
+
   const fetchJobs = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const auth = getAuthData();
+  
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token'); // Make sure you're storing the token on login
       
-      if (!auth.isValid) {
-        throw new Error('Invalid authentication data');
+      if (!userId) {
+        throw new Error('User not authenticated');
       }
-
+  
       const queryParams = new URLSearchParams({
         page: '1',
         limit: '10',
-        status: selectedStatus !== 'All' ? selectedStatus : undefined,
-        search: searchTerm || undefined
+        status: selectedStatus !== 'All' ? selectedStatus : '',
+        search: searchTerm || ''
       }).toString();
-
-      const response = await fetch(
-        `/api/jobs/employer/${auth.userId}?${queryParams}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${auth.token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        }
-      );
-
-    
+  
+      const response = await fetch(`/api/jobs/employer/${userId}?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Add token to headers
+        },
+        credentials: 'include'
+      });
+      
+      if (response.status === 401) {  
+        localStorage.removeItem('userId');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
+  
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch jobs');
       }
-
+  
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.error || 'Failed to load jobs');
       }
-
+  
       setJobs(data.data || []);
       
-      // Update starred jobs if the data includes that information
       const starredSet = new Set(
         (data.data || [])
           .filter(job => job.isStarred)
           .map(job => job._id)
       );
       setStarredJobs(starredSet);
-
+  
     } catch (err) {
       console.error('Error fetching jobs:', err);
       setError(err.message);
       
-      if (err.message.includes('session has expired') || err.message.includes('Invalid authentication')) {
-        navigate('/login', { 
-          state: { 
-            from: '/employers/jobs',
-            message: 'Please log in again to continue.'
-          } 
-        });
+      if (err.message === 'User not authenticated') {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('token');
+        navigate('/login');
       }
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    if (!token || !userId || userRole !== 'employer') {
-      navigate('/');
-      return;
-    }
-  }, [token, userId, userRole, navigate]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -142,29 +107,23 @@ const ManageJobs = () => {
   }, []);
 
   useEffect(() => {
-    // Load starred jobs from localStorage
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
     const savedStarredJobs = localStorage.getItem('starredJobs');
     if (savedStarredJobs) {
       setStarredJobs(new Set(JSON.parse(savedStarredJobs)));
     }
 
-    if (token && userId) {
-      fetchJobs();
-    }
-  }, [userId, token, navigate]);
+    fetchJobs();
+  }, []);
 
   useEffect(() => {
-    const checkAuthAndFetchJobs = async () => {
-      if (token && userId && userRole === 'employer') {
-        await fetchJobs();
-      } else {
-        setError('Authentication required');
-        navigate('/login');
-      }
-    };
-
-    checkAuthAndFetchJobs();
-  }, [userId, token, userRole, selectedStatus, searchTerm]);
+    fetchJobs();
+  }, [selectedStatus, searchTerm]);
 
   useEffect(() => {
     localStorage.setItem('starredJobs', JSON.stringify([...starredJobs]));
@@ -189,33 +148,52 @@ const ManageJobs = () => {
   const toggleStar = async (jobId, currentStarStatus) => {
     try {
       const newStarStatus = !currentStarStatus;
-
+      const userId = localStorage.getItem('userId');
+  
+      if (!userId) {
+        throw new Error('Authentication required');
+      }
+  
       const response = await fetch(`/api/jobs/${jobId}/is-starred`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isStarred: newStarStatus }),
+        credentials: 'include',  // This ensures cookies are sent with the request
+        body: JSON.stringify({ 
+          isStarred: newStarStatus
+        })
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to update star status');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update star status');
       }
-
-      setStarredJobs((prev) => {
-        const updatedStarred = new Set(prev);
-        if (newStarStatus) {
-          updatedStarred.add(jobId);
-        } else {
-          updatedStarred.delete(jobId);
-        }
-        return updatedStarred;
-      });
+  
+      const data = await response.json();
+      
+      if (data.success) {
+        setStarredJobs((prev) => {
+          const updatedStarred = new Set(prev);
+          if (newStarStatus) {
+            updatedStarred.add(jobId);
+          } else {
+            updatedStarred.delete(jobId);
+          }
+          return updatedStarred;
+        });
+  
+        showNotification('Star status updated successfully');
+      } else {
+        throw new Error(data.message || 'Failed to update star status');
+      }
     } catch (error) {
-      console.error('Error updating star status:', error);
+      console.error('Star toggle error:', error);
+      showNotification(error.message, 'error');
     }
   };
+
+
 
   const toggleJobSelection = (jobId) => {
     setSelectedJobs((prev) => {
@@ -240,52 +218,40 @@ const ManageJobs = () => {
 
   const handleBulkAction = async (action) => {
     const selectedJobIds = Array.from(selectedJobs);
+    const userId = localStorage.getItem('userId');
 
     try {
-      let endpoint;
-      let message;
-
-      switch (action) {
-        case 'delete':
-          endpoint = '/api/jobs/delete-multiple';
-          message = 'Selected jobs deleted successfully';
-          break;
-        default:
-          return;
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
+      const response = await fetch('/api/jobs/delete-multiple', {
+        method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ jobIds: selectedJobIds, employerId: userId }),
+        credentials: 'include',  // This ensures cookies are sent with the request
+        body: JSON.stringify({ 
+          jobIds: selectedJobIds,
+          employerId: userId 
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} jobs`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to ${action} jobs`);
       }
 
-      if (action === 'delete') {
-        setJobs((prev) => prev.filter((job) => !selectedJobs.has(job._id)));
-      }
-
+      setJobs((prev) => prev.filter((job) => !selectedJobs.has(job._id)));
       setSelectedJobs(new Set());
-      showNotification(message);
+      showNotification(`Selected jobs ${action}d successfully`);
     } catch (err) {
-      console.error(err);
-      showNotification(`Failed to ${action} jobs`, 'error');
+      console.error(`Bulk ${action} error:`, err);
+      showNotification(err.message || `Failed to ${action} jobs`, 'error');
     }
   };
-
   const handleActionClick = async (jobId, action) => {
     switch (action) {
       case 'view':
         navigate(`/employers/view-job/${jobId}`);
         break;
       case 'edit':
-        // Pass the job data through navigation state
         const jobToEdit = jobs.find(job => job._id === jobId);
         if (jobToEdit) {
           navigate(`/employers/edit-job/${jobId}`, {
@@ -296,23 +262,25 @@ const ManageJobs = () => {
       case 'delete':
         if (window.confirm('Are you sure you want to delete this job?')) {
           try {
+            const userId = localStorage.getItem('userId');
             const response = await fetch(`/api/jobs/delete-job/${jobId}`, {
               method: 'DELETE',
               headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
+              credentials: 'include'  // This ensures cookies are sent with the request
             });
 
             if (!response.ok) {
-              throw new Error('Failed to delete job');
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Failed to delete job');
             }
 
             setJobs((prev) => prev.filter((job) => job._id !== jobId));
             showNotification('Job deleted successfully');
           } catch (err) {
-            console.error(err);
-            showNotification('Failed to delete job', 'error');
+            console.error('Delete error:', err);
+            showNotification(err.message || 'Failed to delete job', 'error');
           }
         }
         break;
@@ -321,9 +289,13 @@ const ManageJobs = () => {
     }
     setActiveDropdown(null);
   };
+
+
+
   const handleRowClick = (jobId) => {
     navigate(`/employers/view-job/${jobId}`);
   };
+
   const filteredJobs = jobs.filter(job => {
     const matchesStatus = selectedStatus === 'All' || job.jobStatus === selectedStatus;
     const matchesSearch = job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
@@ -429,6 +401,7 @@ const ManageJobs = () => {
       </div>
     </div>
   );
+
   const ActionsDropdown = ({ jobId }) => (
     <div 
       ref={dropdownRef}
@@ -457,7 +430,6 @@ const ManageJobs = () => {
       </div>
     </div>
   );
-
 
   return (
     <div className="flex h-screen">

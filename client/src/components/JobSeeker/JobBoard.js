@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 const JobBoard = () => {
-  
-  // Get the userId in local storage or state
-  const userId = localStorage.getItem('userId'); 
-  //const userRole = localStorage.getItem('userRole');
+  // Get the userId from local storage
+  const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
 
-  console.log("User ID:", userId);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,9 +61,10 @@ const JobBoard = () => {
     'Other',
   ];
 
+  
   const fetchJobs = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const queryObj = {
         page: pagination.currentPage,
         limit: pagination.recordsPerPage,
@@ -76,31 +73,58 @@ const JobBoard = () => {
         ...filters,
       };
 
-      Object.keys(queryObj).forEach(key => !queryObj[key] && delete queryObj[key]);
+      Object.keys(queryObj).forEach((key) => !queryObj[key] && delete queryObj[key]);
 
       const queryParams = new URLSearchParams(queryObj);
-      const response = await fetch(`/api/jobs?${queryParams}`);
+      
+      const response = await fetch(`/api/jobs/seeker/all?${queryParams}`, {
+        method: 'GET',
+        credentials: 'include', // This is crucial for sending cookies
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 401) {
+        // Handle unauthorized - redirect to login
+        navigate('/login');
+        return;
+      }
+
+      if (response.status === 403) {
+        setError('You do not have permission to view jobs. Please ensure you are logged in as a job seeker.');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs');
+      }
+
       const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || 'Failed to fetch jobs');
-
+      
+      if (data.success === false) {
+        throw new Error(data.message || 'Failed to fetch jobs');
+      }
+      
       setJobs(data.data || []);
       setFilterOptions(data.filterOptions || {});
       setPagination(data.pagination || {});
     } catch (err) {
       setError(err.message);
+      if (err.message.includes('Authentication')) {
+        navigate('/login');
+      }
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchJobs();
   }, [filters, pagination.currentPage, sorting]);
 
   const handleFilterChange = (name, value) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const handleSortChange = (e) => {
@@ -118,12 +142,13 @@ const JobBoard = () => {
       salaryMax: '',
       status: 'Open',
     });
+    setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset pagination on clear
   };
 
   return (
     <div className="max-w-7xl mx-auto p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <header className="flex items-center justify-between mb-6">
         <div className="text-2xl">LOGO</div>
         <nav className="hidden md:flex space-x-6">
           <a href="#" className="text-gray-600">Explore Jobs</a>
@@ -134,10 +159,10 @@ const JobBoard = () => {
           <span>Roberto</span>
           <div className="w-8 h-8 bg-black rounded-full"></div>
         </div>
-      </div>
+      </header>
 
       {/* Search Section */}
-      <div className="mb-8">
+      <section className="mb-8">
         <div className="flex flex-col md:flex-row gap-2 bg-gray-100 p-2 rounded-lg">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -210,7 +235,7 @@ const JobBoard = () => {
         <div className="md:hidden mt-4">
           <button
             className="w-full p-2 bg-gray-100 rounded-md flex items-center justify-center gap-2"
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            onClick={() => setShowMobileFilters((prev) => !prev)}
           >
             {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
@@ -237,7 +262,7 @@ const JobBoard = () => {
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       {/* Results Section */}
       <div className="mb-4 flex justify-between items-center">
@@ -260,30 +285,19 @@ const JobBoard = () => {
         <div className="text-center py-8 text-red-500">{error}</div>
       ) : (
         <div className="space-y-4">
-          {jobs.map(job => (
-            <div key={job.id} className="bg-gray-100 p-6 rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-xl font-medium">{job.jobTitle}</h3>
-                  <div className="text-gray-600">{job.company}</div>
-                  <div className="text-gray-500">{job.location}</div>
-                  {job.salaryMin && <div className="text-gray-600">${job.salaryMax}</div>}
-                </div>
-                <div className="flex space-x-2">
-                  <button className="text-gray-600">SAVE</button>
-                  <button className="text-gray-600">REPORT</button>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-4">{job.jobDescription}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">
-                  {new Date(job.createdAt).toLocaleDateString()}
-                </span>
-                <button 
-                  onClick={() => navigate(`/jobs/${job._id}`)}
-                  className="bg-black text-white px-6 py-2 rounded"
+          {jobs.map((job) => (
+            <div key={job._id} className="p-4 border border-gray-300 rounded-lg hover:shadow-md transition-shadow duration-200">
+              <h3 className="text-lg font-semibold">{job.jobTitle}</h3>
+              <p className="text-gray-600">{job.location}</p>
+              <p className="text-gray-600">{job.industry}</p>
+              <p className="text-gray-600">{job.employmentType}</p>
+              <p className="text-gray-600">Salary: ${job.salaryMin} - ${job.salaryMax}</p>
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => navigate(`/job/${job._id}`)}
+                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
                 >
-                  VIEW
+                  View Details
                 </button>
               </div>
             </div>
@@ -292,21 +306,23 @@ const JobBoard = () => {
       )}
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
+      <div className="flex justify-between mt-6">
         <button
+          onClick={() => setPagination((prev) => ({ ...prev, currentPage: prev.currentPage - 1 }))}
           disabled={pagination.currentPage === 1}
-          onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-          className="p-2 bg-gray-100 rounded-md disabled:opacity-50"
+          className="p-2 bg-gray-300 rounded-md disabled:opacity-50"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft />
         </button>
-        <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
+        <span>
+          Page {pagination.currentPage} of {pagination.totalPages}
+        </span>
         <button
+          onClick={() => setPagination((prev) => ({ ...prev, currentPage: prev.currentPage + 1 }))}
           disabled={pagination.currentPage === pagination.totalPages}
-          onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-          className="p-2 bg-gray-100 rounded-md disabled:opacity-50"
+          className="p-2 bg-gray-300 rounded-md disabled:opacity-50"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight />
         </button>
       </div>
     </div>

@@ -1,38 +1,42 @@
-// routes/jobRoutes.js
 import express from 'express';
+import { authMiddleware, roleMiddleware } from '../middleware/authMiddlewareControl.js';
 import {
   createJob,
-  updateJobPosting,
-  getJobs,
-  getJobPostingById,
+  getEmployerJobs,
+  getJobById,
+  updateJob,
+  updateJobStarStatus,
+  updateJobStatus,
   deleteJob,
-  updateIsStarred,
   deleteMultipleJobs,
-  getEmployerJobs
+  getJobApplications,
+  searchJobs
 } from '../controllers/jobController.js';
-import  authMiddleware from '../MiddleWare/authMiddlewareControl.js';
 
 const router = express.Router();
 
-router.get('/employer/:employersId',  authMiddleware, getEmployerJobs);
+// Apply authentication middleware to all routes
+router.use(authMiddleware);
 
-// POST route to create a new job posting
-router.post('/create', authMiddleware,createJob);
+// Public routes (accessible to all authenticated users)
+router.get('/search', searchJobs);
+router.get('/:jobId', getJobById);
 
-// PUT route to update a job posting by ID
-router.put('/update/:id', authMiddleware, updateJobPosting);
+// Employer-only routes
+router.use(roleMiddleware(['employer']));
 
-// GET route to retrieve a job posting by ID
-router.get('/:id',  authMiddleware,getJobPostingById);
+// Job CRUD operations
+router.post('/create', createJob);
+router.get('/employer/:employerId', getEmployerJobs);
+router.get('/applications/:jobId', getJobApplications);
 
-// GET route for fetching all jobs
-router.get('/',  authMiddleware,getJobs);  // Make sure this line exists
+// Edit-related routes
+router.patch('/:jobId/update', updateJob); // Route for updating individual fields
+router.patch('/:jobId/status', updateJobStatus);
+router.patch('/:jobId/is-starred', updateJobStarStatus);
 
-// DELETE route for removing jobs
-router.delete('/delete-job/:id',  authMiddleware,deleteJob);
-
-router.patch('/:id/is-starred', authMiddleware, updateIsStarred);
-
-router.delete('/delete-multiple', authMiddleware, deleteMultipleJobs);
+// Delete routes
+router.delete('/delete-job/:jobId', deleteJob);
+router.delete('/delete-multiple', deleteMultipleJobs);
 
 export default router;

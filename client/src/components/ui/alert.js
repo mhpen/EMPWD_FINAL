@@ -3,10 +3,10 @@ import React from 'react';
 
 // Define styles for different alert types
 const alertStyles = {
-  success: 'bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded',
-  error: 'bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded',
-  warning: 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded',
-  info: 'bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded',
+  success: 'bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4',
+  error: 'bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4',
+  warning: 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-4',
+  info: 'bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded mb-4',
 };
 
 // Alert Component

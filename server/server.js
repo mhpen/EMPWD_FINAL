@@ -1,30 +1,37 @@
+// server.js
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
+import helmet from 'helmet';
 
-// ----------------------------- Import routes -----------------------------
+// Import routes
 import employerRoutes from './routes/userRoutes/employerRoutes/employerRoute.js';
 import jobSeekerRoutes from './routes/userRoutes/jobSeekerRoutes/jobSeekerRoutes.js';
 import jobRoutes from './routes/jobRoute.js';
-import loginRoutes from './routes/loginRoutes.js'; // Login route
-import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js'
-import authMiddleware from './MiddleWare/authMiddlewareControl.js';
-import authRoutes from './routes/auth.js';
+import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js';
+import authRoutes from './routes/authRoutes.js'; 
+import jobForSeekerRoutes from './routes/jobForSeekerRoutes.js';
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(express.json());
+app.use(helmet()); // Set security HTTP headers
+app.use(compression()); // Compress response bodies
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+app.use(cookieParser()); // Parse cookies
+
+// CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: 'http://localhost:3000',
   credentials: true
 }));
-app.use(cookieParser());
-app.use(express.json());
+
 // MongoDB connection
 const mongoURI = process.env.MONGODB_URI;
 if (!mongoURI) {
@@ -33,45 +40,37 @@ if (!mongoURI) {
 }
 
 mongoose.connect(mongoURI)
-.then(() => {
-  console.log('Connected to MongoDB');
-  console.log('Database name:', mongoose.connection.name);
-})
+  .then(() => console.log('Connected to MongoDB'))
   .catch(err => {
-  console.error('Could not connect to MongoDB', err);
-  process.exit(1);
-});
+    console.error('Could not connect to MongoDB', err);
+    process.exit(1);
+  });
 
 // Logging middleware for requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} request to ${req.url}`);
-  console.log('Request body:', req.body);
   next();
 });
+
+// Route handlers
+app.use('/api/auth', authRoutes); // Auth routes for login/register, etc.
+app.use('/api/employers', employerRoutes); // Employer-specific routes
+app.use('/api/jobSeekers', jobSeekerRoutes); // Job seeker-specific routes
+app.use('/api/jobs', jobRoutes); // Job listing and management routes
+app.use('/api/jobapplications', jobApplicationRoutes); // Job applications
+app.use('/api/jobs/seeker', jobForSeekerRoutes); // Job seeker routes for jobs
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).json({ message: 'Something broke!' });
 });
-app.use('/api/auth', authRoutes);
-// Route handlers
-app.use('/api/employers', employerRoutes); 
-app.use('/api/jobSeekers', jobSeekerRoutes);
-app.use('/api/jobs', jobRoutes); // This line should be present
-app.use('/api/auth', loginRoutes); // Login route
-app.use('/api/jobapplications', authMiddleware, jobApplicationRoutes) // application route
-//app.use('api/jobseekers/user', getJobSeekerById)
 
-
-// Test POST route
+// Test routes for debugging
 app.post('/test-post', (req, res) => {
-  console.log('Test POST route hit');
-  console.log('Request body:', req.body);
   res.json({ message: 'POST test successful', receivedData: req.body });
 });
 
-// Test GET route
 app.get('/test', (req, res) => {
   res.send('Test route working');
 });
@@ -81,8 +80,3 @@ const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-// Log environment variables for debugging
-console.log('MONGODB_URI:', process.env.MONGODB_URI);
-console.log('PORT:', process.env.PORT);
-console.log('JWT_SECRET:', process.env.JWT_SECRET); 

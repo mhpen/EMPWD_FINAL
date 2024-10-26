@@ -26,11 +26,12 @@ const App = () => {
 
           <Route path = "/employers/edit-job/:jobId" element = {<EditJob/>} />
           {/* Existing routes */}
+          <Route path="/login" element={<Login />} />
+
           <Route path="/job-application" element={<JobApplication/>} />
           <Route path="/create-employer" element={<CreateEmployer />} />
           <Route path="/RegisterjobSeeker" element={<CreateJobSeeker />} />
           <Route path="/job-dashboard" element={<JobsDashboard />} />
-          <Route path="/" element={<Login />} />
           <Route path="/employers/create-job" element={<JobPostingForm />} />
           <Route path="/user-type" element={<Usertype />} />
         </Routes>
