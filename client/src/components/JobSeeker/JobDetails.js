@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Clock, Building2, ChevronLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import NavSeeker from '../ui/navSeeker';
 
 const JobDetails = () => {
   const [job, setJob] = useState(null);
@@ -97,8 +98,26 @@ const JobDetails = () => {
   if (!job) return null;
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="mb-8">
+    <div className="min-h-screen bg-white">
+      <NavSeeker />
+      <div className="max-w-8xl mx-auto p-8  font-poppins ">
+      <div className="w-full h-32 bg-green-200 rounded-xl mb-8">
+      </div>
+      <div className="relative flex justify-center  bg-gray-300 rounded-xl p-4 w-1/2 mx-auto -mt-16 text-[20px]">
+          <input 
+              type="text" 
+              placeholder="Enter job title" 
+              className="flex-grow bg-gray-300 outline-none text-black px-4"
+          />
+          <span className="mx-2 text-black">|</span>
+          <input 
+              type="text" 
+              placeholder="Location" 
+              className="flex-grow bg-gray-300 outline-none text-black px-4"
+          />
+      </div>
+
+      <div className="max-w-8xl w-full mx-auto p-8">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-900"
@@ -108,8 +127,8 @@ const JobDetails = () => {
         </button>
       </div>
 
-      <div className="bg-gray-100 p-6 rounded-lg mb-6">
-        <div className="flex items-start justify-between mb-4">
+      <div className="bg-gray-100 rounded-lg mb-6">
+        <div className=" flex items-start justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold mb-2">{job.jobTitle}</h1>
             <div className="flex items-center text-gray-600 mb-2">
@@ -200,6 +219,7 @@ const JobDetails = () => {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 };

@@ -1,34 +1,35 @@
+// middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    // Check for token in both cookie and Authorization header
+    // Check for token in both cookies and Authorization header
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-    
+
     if (!token) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: 'Authentication required' 
+        message: 'Authentication required'
       });
     }
     console.log('Cookies:', req.cookies);
     console.log('Token:', token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Add complete user object to request
+
+    // Attach full user data to request
     req.user = {
       _id: decoded.userId,
       role: decoded.role,
       email: decoded.email
     };
-    
+
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    return res.status(401).json({ 
+    return res.status(401).json({
       success: false,
-      message: 'Invalid or expired authentication' 
+      message: 'Invalid or expired authentication'
     });
   }
 };

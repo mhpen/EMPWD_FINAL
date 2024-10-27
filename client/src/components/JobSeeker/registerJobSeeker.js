@@ -517,6 +517,12 @@ const CreateJobSeeker = () => {
                 <button className="mb-2 mt-8 w-52 p-2 border border-black rounded" disabled>Upload Resume</button>
                 <p className="text-center text-gray-600 mb-16 font-poppins text-[12px]">Supported Formats: "Max file size 5MB, formats: PDF, DOC, DOCX"</p>
               </div>
+              <div className="flex items-center justify-center mb-8">
+                <input type="checkbox" id="terms" className="mr-2" />
+                <label htmlFor="terms" className="text-gray-600 font-poppins text-[14px]">
+                  I agree to the <a href="/privacy" className="text-blue-500 underline">Privacy Policy</a> and <a href="/terms" className="text-blue-500 underline">Terms and Conditions</a>
+                </label>
+              </div>
             </div>
           )  
         );

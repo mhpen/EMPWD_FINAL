@@ -4,7 +4,7 @@ import { formatDistance } from 'date-fns';
 
 const JobCard = ({ job }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+    <div className="bg-white ">
       <h2 className="text-xl font-semibold text-gray-900 mb-2">
         {job.jobTitle}
       </h2>
@@ -34,7 +34,7 @@ const JobCard = ({ job }) => {
         </span>
         <Link
           to={`/jobs/${job._id}`}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          className="bg-black text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
         >
           View Details
         </Link>

@@ -27,19 +27,20 @@ const JobList = () => {
   if (error) return <div className="text-red-500 text-center py-10">{error}</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-white">
       
       <NavSeeker />
-
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Available Jobs</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {jobs.map((job) => (
-          <JobCard key={job._id} job={job} />
-        ))}
+      <div className="max-w-8xl w-full mx-auto p-8">
+        <h1 className="font-medium mb-2 font-poppins text-[36px]">Available Jobs</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jobs.map((job) => (
+            <JobCard key={job._id} job={job} />
+          ))}
+        </div>
+        {jobs.length === 0 && (
+          <p className="text-center text-gray-500">No jobs available at the moment.</p>
+        )}
       </div>
-      {jobs.length === 0 && (
-        <p className="text-center text-gray-500">No jobs available at the moment.</p>
-      )}
     </div>
   );
 };

@@ -1,126 +1,32 @@
-import JobApplication from '../models/jobApplicationModel.js';
+// controllers/applicationController.js
+import Application from '../models/jobApplicationModel.js';
 import JobSeeker from '../models/userModel.js';
+import Job from '../models/job.js';
 
+export const submitApplication = async (req, res) => {
+  const { jobId, jobseekerId, basicInfo, workHistory, jobPreferences, documents } = req.body;
 
+  if (!jobId || !jobseekerId || !basicInfo || !workHistory || !jobPreferences || !documents) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
 
-// Create a new job application based on JobSeeker ID
-const createJobApplication = async (req, res) => {
-    try {
-        const { phoneNumber, jobPreferences, workHistory, resume, applicationStatus } = req.body;
+  try {
+    // Create a new application
+    const newApplication = new Application({
+      jobId,
+      jobseekerId,
+      basicInfo,
+      workHistory,
+      jobPreferences,
+      documents,
+    });
 
-        //get the userID in session or local storage
-        //const userId = localStorage.getItem('userId'); 
+    // Save the application to the database
+    await newApplication.save();
 
-        // req.user now contains the logged-in user's ID
-        const userId = req.user;
-
-        //  Find the JobSeeker by ID
-        const jobSeeker = await JobSeeker.findById(userId);
-
-        if (!jobSeeker) {
-            return res.status(404).json({ message: 'JobSeeker not found' });
-            
-        }
-        //const jobSeeker = userId;  
-        console.log(jobSeeker);
-
-        // Create a new JobApplication instance
-        const newApplication = new JobApplication({
-            personalInformation: {
-                jobSeeker: jobSeeker._id, // Reference the JobSeeker's ObjectId
-                phoneNumber: phoneNumber, // Include the phone number in personal information
-            },
-            jobPreferences,
-            workHistory,
-            resume,
-            applicationStatus: applicationStatus || 'pending', // Default to 'pending' if not provided
-        });
-
-        // Save the new application
-        await newApplication.save();
-
-        // Populate the JobSeeker field after saving
-        const populatedApplication = await JobApplication.findById(newApplication._id)
-            .populate('personalInformation.jobSeeker');
-
-        res.status(201).json({
-            message: 'Job Application created successfully',
-            data: populatedApplication, // Return the populated data with JobSeeker info
-        });
-    } catch (error) {
-        console.error('Error creating job application:', error);
-        res.status(500).json({ message: 'Error creating job application', error });
-    }
-};
-
-
-
-// Fetch all job applications
-const getAllJobApplications = async (req, res) => {
-    try {
-        const applications = await JobApplication.find().populate('personalInformation.jobSeeker');
-        res.status(200).json(applications);
-    } catch (error) {
-        console.error('Error fetching job applications:', error);
-        res.status(500).json({ message: 'Error fetching job applications', error });
-    }
-};
-
-// Fetch a specific job application by ID
-const getJobApplicationById = async (req, res) => {
-    try {
-        const { applicationId } = req.params;
-        const application = await JobApplication.findById(applicationId).populate('personalInformation.jobSeeker');
-        if (!application) {
-            return res.status(404).json({ message: 'Job Application not found' });
-        }
-        res.status(200).json(application);
-    } catch (error) {
-        console.error('Error fetching job application by ID:', error);
-        res.status(500).json({ message: 'Error fetching job application', error });
-    }
-};
-
-// Update a specific job application
-const updateJobApplication = async (req, res) => {
-    try {
-        const { applicationId } = req.params;
-        const updatedApplication = await JobApplication.findByIdAndUpdate(applicationId, req.body, { new: true })
-            .populate('personalInformation.jobSeeker');
-        if (!updatedApplication) {
-            return res.status(404).json({ message: 'Job Application not found' });
-        }
-        res.status(200).json({
-            message: 'Job Application updated successfully',
-            data: updatedApplication,
-        });
-    } catch (error) {
-        console.error('Error updating job application:', error);
-        res.status(500).json({ message: 'Error updating job application', error });
-    }
-};
-
-// Delete a specific job application
-const deleteJobApplication = async (req, res) => {
-    try {
-        const { applicationId } = req.params;
-        const deletedApplication = await JobApplication.findByIdAndDelete(applicationId);
-        if (!deletedApplication) {
-            return res.status(404).json({ message: 'Job Application not found' });
-        }
-        res.status(200).json({
-            message: 'Job Application deleted successfully',
-        });
-    } catch (error) {
-        console.error('Error deleting job application:', error);
-        res.status(500).json({ message: 'Error deleting job application', error });
-    }
-};
-
-export {
-   createJobApplication,
-   getAllJobApplications,
-   getJobApplicationById,
-   updateJobApplication,
-   deleteJobApplication
+    return res.status(201).json({ success: true, message: 'Application submitted successfully!' });
+  } catch (error) {
+    console.error('Error submitting application:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred while submitting the application.' });
+  }
 };

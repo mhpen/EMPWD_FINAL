@@ -1,42 +1,39 @@
+// models/jobApplicationModel.js
 import mongoose from 'mongoose';
 
-const jobApplicationSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'JobSeeker',
-      required: true,
-    },
-    jobId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Job',
-      required: true,
-    },
-    basicInfo: {
-      fullName: { type: String, required: true },
-      email: { type: String, required: true },
-      phoneNumber: { type: String, required: true },
-      location: { type: String, required: true },
-    },
-    jobPreferences: {
-      desiredPosition: { type: String, required: true },
-      preferredStartDate: { type: Date, required: true },
-      currentLocation: { type: String, required: true },
-      availability: { type: String, required: true },
-    },
-    workHistory: {
-      previousJobTitle: { type: String, required: true },
-      companyName: { type: String, required: true },
-      duration: { type: String, required: true },
-      keyResponsibility: { type: String, required: true },
-    },
-    documents: {
-      resumeUrl: { type: String, required: true },
-      coverLetterUrl: { type: String },
-    },
+const jobApplicationSchema = new mongoose.Schema({
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job', // Assuming you have a Job model
+    required: true,
   },
-  { timestamps: true }
-);
+  jobseekerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'JobSeeker', // Correcting the reference to JobSeeker
+    required: true,
+  },
+  basicInfo: {
+    firstName: String,
+    lastName: String,
+    email: String,
+    // Add other fields as needed
+  },
+  workHistory: {
+    previousJobTitle: String,
+    companyName: String,
+    duration: String,
+    keyResponsibility: String,
+  },
+  jobPreferences: {
+    preferredLocation: String,
+    employmentType: String,
+  },
+  documents: {
+    resumeUrl: String,
+    coverLetterUrl: String,
+  },
+}, { timestamps: true });
 
-const JobApplication = mongoose.model('JobApplication', jobApplicationSchema);
-export default JobApplication;
+const Application = mongoose.model('Application', jobApplicationSchema);
+
+export default Application; 
