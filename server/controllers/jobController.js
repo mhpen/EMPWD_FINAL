@@ -1,4 +1,4 @@
-import Job from '../models/Job.js';
+import Job from '../models/job.js';
 import mongoose from 'mongoose';
 
 // Create a new job posting
@@ -41,7 +41,7 @@ export const createJob = async (req, res) => {
       additionalPerks,
       accessibilityFeatures,
       specialAccommodations,
-      jobStatus: 'Open'
+      jobStatus: 'open'
     });
 
     await newJob.save();

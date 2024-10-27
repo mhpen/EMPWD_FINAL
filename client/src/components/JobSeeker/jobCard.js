@@ -3,17 +3,20 @@ import { Link } from 'react-router-dom';
 import { formatDistance } from 'date-fns';
 
 const JobCard = ({ job }) => {
+  // Check if job._id is defined and a valid string
+  const jobId = job._id ? job._id.toString() : '';
+
   return (
-    <div className="bg-white ">
+    <div className="bg-white p-4 rounded shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900 mb-2">
         {job.jobTitle}
       </h2>
-      <p className="text-gray-600 mb-2">{job.employersId?.companyName}</p>
+      <p className="text-gray-600 mb-2">{job.employersId?.companyName || 'Unknown Company'}</p>
       <div className="mb-4">
-        <p className="text-gray-500">📍 {job.jobLocation}</p>
-        <p className="text-gray-500">💼 {job.employmentType}</p>
+        <p className="text-gray-500">📍 {job.jobLocation || 'Location not specified'}</p>
+        <p className="text-gray-500">💼 {job.employmentType || 'Employment type not specified'}</p>
         <p className="text-gray-500">
-          💰 ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} /year
+          💰 ${job.salaryMin?.toLocaleString() || 'N/A'} - ${job.salaryMax?.toLocaleString() || 'N/A'} /year
         </p>
       </div>
       <div className="mb-4">
@@ -33,7 +36,7 @@ const JobCard = ({ job }) => {
           Posted {formatDistance(new Date(job.createdAt), new Date(), { addSuffix: true })}
         </span>
         <Link
-          to={`/jobs/${job._id}`}
+          to={`/jobs/${jobId}`}
           className="bg-black text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
         >
           View Details

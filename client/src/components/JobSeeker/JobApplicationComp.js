@@ -93,7 +93,6 @@ const ApplicationForm = () => {
       // Prepare application data
       const applicationData = {
         jobId: id,
-        jobseekerId,
         basicInfo: {
           firstName: profileData.basicInfo.firstName.trim(),
           lastName: profileData.basicInfo.lastName.trim(),
@@ -118,14 +117,10 @@ const ApplicationForm = () => {
         },
       };
   
-      // Log the full application data before sending
-      console.log('Application Data being sent:', applicationData);
-  
-      // Make the API call with explicit headers
       const response = await axios.post('/api/applications/submit', applicationData, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if you're using one
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         withCredentials: true,
       });
@@ -144,6 +139,7 @@ const ApplicationForm = () => {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className=" ">

@@ -10,6 +10,8 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  console.log("job id:", id);
+
   useEffect(() => {
     const fetchJobDetails = async () => {
       if (!id) {
@@ -49,6 +51,7 @@ const JobDetails = () => {
       } 
     });
   };
+
   const handleSaveJob = async () => {
     try {
       const response = await fetch(`/api/jobs/${id}/save`, {
@@ -101,21 +104,6 @@ const JobDetails = () => {
     <div className="min-h-screen bg-white">
       <NavSeeker />
       <div className="max-w-8xl mx-auto p-8  font-poppins ">
-      <div className="w-full h-32 bg-green-200 rounded-xl mb-8">
-      </div>
-      <div className="relative flex justify-center  bg-gray-300 rounded-xl p-4 w-1/2 mx-auto -mt-16 text-[20px]">
-          <input 
-              type="text" 
-              placeholder="Enter job title" 
-              className="flex-grow bg-gray-300 outline-none text-black px-4"
-          />
-          <span className="mx-2 text-black">|</span>
-          <input 
-              type="text" 
-              placeholder="Location" 
-              className="flex-grow bg-gray-300 outline-none text-black px-4"
-          />
-      </div>
 
       <div className="max-w-8xl w-full mx-auto p-8">
         <button

@@ -290,8 +290,6 @@ const ManageJobs = () => {
     setActiveDropdown(null);
   };
 
-
-
   const handleRowClick = (jobId) => {
     navigate(`/employers/view-job/${jobId}`);
   };
@@ -405,27 +403,27 @@ const ManageJobs = () => {
   const ActionsDropdown = ({ jobId }) => (
     <div 
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border"
+      className="absolute mt-12 right-0 bg-white rounded-md shadow-lg  border"
       style={{ transform: 'translateY(-50%)' }}
     >
-      <div className="py-1">
+      <div className=" z-9999">
         <button
-          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          className="w-full text-left px-2 py-2 hover:bg-gray-100"
           onClick={() => handleActionClick(jobId, 'view')}
         >
-          View
+          <i className="bi bi-eye-fill"></i> {/* View icon */}
         </button>
         <button
-          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          className="w-full text-left px-2 py-2 hover:bg-gray-100"
           onClick={() => handleActionClick(jobId, 'edit')}
         >
-          Edit
+          <i className="bi bi-pencil-fill"></i> {/* Edit icon */}
         </button>
         <button
-          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+          className="w-full text-left px-2 py-2 hover:bg-gray-100 text-red-600"
           onClick={() => handleActionClick(jobId, 'delete')}
         >
-          Delete
+          <i className="bi bi-trash-fill"></i> {/* Trashcan icon */}
         </button>
       </div>
     </div>

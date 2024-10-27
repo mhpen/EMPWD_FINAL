@@ -3,6 +3,31 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from "../ui/card.js";
 
+const Header3 = () => {
+  return (
+    <div className="border-b border-gray-300 font-poppins ">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center">
+          <div className="flex items-center">
+            <i className="fas fa-cube text-2xl"></i>
+            <span className="ml-2 text-xl font-semibold ">photo</span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-8">
+          <span className="text-lg hidden sm:inline ">Notifications</span>
+          
+          <span className="text-lg hidden sm:inline ">Messages</span>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">Roberto</span>
+            <div className="w-8 h-8 bg-gray-900 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ViewJob = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
@@ -66,9 +91,10 @@ const ViewJob = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50 ">
+      <Header3 />
+      <div className="max-w-4xl mx-auto p-8">
+      
         <div className="flex items-center justify-between mb-8">
           <button 
             onClick={() => window.history.back()} 
@@ -94,7 +120,9 @@ const ViewJob = () => {
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
+
               <div>
+              <div className="w-24 h-24 bg-gray-300 flex-shrink-0"></div>
                 <h1 className="text-2xl font-bold mb-2">{job.jobTitle || job.title}</h1>
                 <p className="text-gray-600 mb-4">{job.location}</p>
               </div>
