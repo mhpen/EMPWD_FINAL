@@ -90,3 +90,48 @@ export const getJobApplications = async (req, res) => {
     });
   }
 };
+
+export const getJobApplicationsForEmployer = async (req, res) => {
+  try {
+    const employerId = req.user._id;  // Assuming req.user._id is the employer’s ID
+
+    // Find jobs created by this employer
+    const jobs = await Job.find({ employersId: employerId }).select('_id jobTitle');
+    
+    // Check if no jobs are found
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No jobs found for this employer.'
+      });
+    }
+
+    const jobIds = jobs.map(job => job._id);
+
+    // Find applications related to these jobs
+    const applications = await Application.find({ jobId: { $in: jobIds } })
+      .populate('jobseeker', 'firstName lastName')  // Populate only necessary fields
+      .populate('jobId', 'jobTitle')  // Populate job title from Job model
+      .sort({ createdAt: -1 });
+
+    // Check if no applications are found
+    if (applications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No applications found for the jobs created by this employer.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: applications
+    });
+  } catch (error) {
+    console.error('Error in getJobApplications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch applications',
+      error: error.message
+    });
+  }
+};

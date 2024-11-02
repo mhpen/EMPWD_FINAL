@@ -33,7 +33,7 @@ import {
           .populate('basicInfo')
           .populate('locationInfo')
           .populate('disabilityInfo')
-          .populate('workPreferences')
+          .populate('wor  kPreferences')
           .populate('additionalInfo');
   
         if (!jobSeeker) {

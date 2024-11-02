@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const applicationSchema = new mongoose.Schema({
   jobseeker: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'BasicInfo',  // This references your JobSeeker model
+    ref: 'BasicInfo',  
     required: true
   },
   jobId: {

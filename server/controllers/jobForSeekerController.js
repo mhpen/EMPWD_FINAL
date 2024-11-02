@@ -3,7 +3,7 @@ import Employer from '../models/userModel.js';
 // Get all approved jobs
 export const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ jobStatus: 'open' })
+    const jobs = await Job.find({ jobStatus: 'Open' })
       .populate('employersId', 'companyName email')  // Only populate necessary employer fields
       .sort({ createdAt: -1 });  // Newest jobs first
     

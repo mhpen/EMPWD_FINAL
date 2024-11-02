@@ -119,11 +119,21 @@ const ViewJob = () => {
         {/* Job Details */}
         <Card className="mb-8">
           <CardContent className="p-6">
-            <div className="flex items-start justify-between">
+            <div className="max-w-7xl mx-auto p-6 flex space-x-6">
+              <div className="flex-1">
+                <div className="w-24 h-24 bg-gray-300 flex-shrink-0"></div>
+                <div className="ml-4">
+                  <div className="flex justify-between">
+                    <h1 className="text-2xl font-bold mb-2">{job.jobTitle || job.title}</h1>
+                  </div>
+
+                </div>
+
+              </div>
 
               <div>
               <div className="w-24 h-24 bg-gray-300 flex-shrink-0"></div>
-                <h1 className="text-2xl font-bold mb-2">{job.jobTitle || job.title}</h1>
+                
                 <p className="text-gray-600 mb-4">{job.location}</p>
               </div>
               <div className="text-right">

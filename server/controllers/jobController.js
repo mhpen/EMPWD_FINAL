@@ -41,7 +41,7 @@ export const createJob = async (req, res) => {
       additionalPerks,
       accessibilityFeatures,
       specialAccommodations,
-      jobStatus: 'open'
+      jobStatus: 'Open'
     });
 
     await newJob.save();

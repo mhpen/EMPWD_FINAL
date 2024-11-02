@@ -127,7 +127,7 @@ const ApplicationForm = () => {
   
       if (response.data.success) {
         alert('Application submitted successfully!');
-        navigate('/applications');
+        navigate('/job-list');
       } else {
         setErrorMessage(response.data.message || 'Failed to submit application');
       }

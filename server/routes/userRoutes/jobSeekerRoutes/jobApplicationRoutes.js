@@ -1,9 +1,8 @@
-// routes/jobApplication.js
 import express from 'express';
 import { 
     submitApplication,
-    getJobSeekerApplications,    // Added for viewing job seeker's applications
-    getJobApplications          // Added for viewing applications for a job
+    getJobApplicationsForEmployer,   // For job seekers to view their applications
+    getJobApplications          // For employers to view applications for their jobs
 } from '../../../controllers/jobApplicationController.js';
 import { 
     authMiddleware, 
@@ -20,20 +19,20 @@ router.post(
     submitApplication
 );
 
-// Get all applications for a specific job seeker
+// Get all applications for the authenticated job seeker
 router.get(
     '/my-applications', 
     authMiddleware, 
     roleMiddleware(['jobseeker']), 
-    getJobSeekerApplications
+    getJobApplications
 );
 
-// Get all applications for a specific job (for employers)
+// Get all applications for jobs created by the authenticated employer
 router.get(
-    '/job/:jobId', 
+    '/employer/:id/applications', 
     authMiddleware, 
-    roleMiddleware(['employer', 'admin']), 
-    getJobApplications
+    roleMiddleware(['employer']), 
+    getJobApplicationsForEmployer
 );
 
 export default router;

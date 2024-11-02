@@ -47,16 +47,16 @@ export const createJobSeeker = async (req, res) => {
 // Get a job seeker by ID
 export const getJobSeekerById = async (req, res) => {
    try {
-      //const jobSeeker = await JobSeeker.findById(req.params.id)
-      const userId = req.headers['x-user-id'];
+      const userId = req.user._id
 
-      const jobSeeker = await JobSeeker.findById(userId)
-         .populate('basicInfo')
-         .populate('locationInfo')
-         .populate('disabilityInfo')
-         .populate('workPreferences')
-         .populate('additionalInfo');
-   
+      const jobSeeker = await BasicInfo.findById(userId)
+         .populate('BasicInfo')
+
+         const res =  {
+            firstName: jobSeeker.basicInfo.firstName,
+            lastName: jobSeeker.basicInfo.lastName
+         };
+  
      if (!jobSeeker) {
          return res.status(404).json({ error: 'Job Seeker not found' });
       }

@@ -12,6 +12,7 @@ import JobApplication from './components/JobSeeker/JobApplicationComp';
 import ViewJob from './components/Employer/viewJob';
 import EditJob from './components/Employer/editJob.js';
 import DebugManageJobs from './components/debugComponent.js';
+import ApplicationDashboard from './components/Employer/jobApplication.js'; 
 const App = () => {
   return (
     <Router>
@@ -22,7 +23,7 @@ const App = () => {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/employers/view-job/:jobId" element={<ViewJob />} />
           <Route path="/debug" element={<DebugManageJobs />} />
-
+          <Route path='/employer/application' element = {<ApplicationDashboard/>} />
           <Route path = "/employers/edit-job/:jobId" element = {<EditJob/>} />
           <Route path="/login" element={<Login />} />
 

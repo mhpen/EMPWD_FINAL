@@ -5,17 +5,19 @@ const NavSeeker = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState(''); // Optional: To store first name
-  const token = localStorage.getItem("token"); // Assume you store the token in localStorage
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
+
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/seekers', {
+
+        const response = await fetch(`/api/jobSeekers/${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, // Pass the token for authentication
           },
+          credentials: 'include'
         });
 
         if (!response.ok) {
@@ -33,7 +35,7 @@ const NavSeeker = () => {
     };
 
     fetchUserData();
-  }, [token]); // Fetch user data when token changes
+  }, [userId]); // Fetch user data when token changes
 
   return (
     <div >
