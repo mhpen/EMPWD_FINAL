@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 const NavRegister = ({ navStep }) => {
   const steps = [
+    'Account Info ───',
     'Basic Info ───',
     'Location Info ───',
     'Disability Info ───',
@@ -31,7 +32,7 @@ const NavRegister = ({ navStep }) => {
         
          {/* Progress Bar */}
          <div className="w-full mt-12 font-poppins text-[15px]">
-          <div className="max-w-5xl w-full mx-auto ">
+          <div className="max-w-7xl w-full mx-auto ">
             <div className="flex flex-wrap items-center justify-between mb-4">
               {steps.map((step, index) => {
                 const isCompleted = index + 1 < navStep;

@@ -11,9 +11,9 @@ import helmet from 'helmet';
 import employerRoutes from './routes/userRoutes/employerRoutes/employerRoute.js';
 import jobSeekerRoutes from './routes/userRoutes/jobSeekerRoutes/jobSeekerRoutes.js';
 import jobRoutes from './routes/jobRoute.js';
-import authRoutes from './routes/authRoutes.js'; 
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from  './routes/userRoutes/admin/adminRoutes.js'; // New admin routes
 import jobForSeekerRoutes from './routes/jobForSeekerRoutes.js';
-//import jobRouterSeeker from './routes/jobRoutesSeeker.js'
 import seekerProfileRoutes from './routes/userRoutes/jobSeekerRoutes/seekerProfileRoutes.js';
 import jobApplicationRoutes from './routes/userRoutes/jobSeekerRoutes/jobApplicationRoutes.js';
 
@@ -31,7 +31,7 @@ app.use(cookieParser()); // Parse cookies
 // CORS configuration
 app.use(cors({
   origin: 'http://localhost:3000',
-  credentials: true
+  credentials: true,
 }));
 
 // MongoDB connection
@@ -56,13 +56,13 @@ app.use((req, res, next) => {
 
 // Route handlers
 app.use('/api/auth', authRoutes); // Auth routes for login/register, etc.
+app.use('/api/admin', adminRoutes); // Admin-specific routes
 app.use('/api/employers', employerRoutes); // Employer-specific routes
-app.use('/api/jobSeekers', jobSeekerRoutes); // Job seeker-specific routes
+app.use('/api/jobseekers', jobSeekerRoutes); // Job seeker-specific routes
 app.use('/api/jobs', jobRoutes); // Job listing and management routes
 app.use('/api/applications', jobApplicationRoutes); // Job applications
-//app.use('/api/jobs/seeker', jobRouterSeeker); // Job seeker routes for jobs
 app.use('/api/job', jobForSeekerRoutes); // Job seeker routes for jobs
-app.use('/api/seekers', seekerProfileRoutes);
+app.use('/api/seekers', seekerProfileRoutes); // Profile management routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

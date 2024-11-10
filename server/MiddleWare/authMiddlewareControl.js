@@ -1,5 +1,6 @@
 // middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
+import { User, JobSeeker, Employer, Admin } from '../models/userModel.js'; // Adjust the path if necessary
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -12,17 +13,40 @@ export const authMiddleware = async (req, res, next) => {
         message: 'Authentication required'
       });
     }
-    console.log('Cookies:', req.cookies);
-    console.log('Token:', token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach full user data to request
+    // Fetch user data from the database
+    const user = await User.findById(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Attach basic user data to request
     req.user = {
-      _id: decoded.userId,
-      role: decoded.role,
-      email: decoded.email
+      _id: user._id,
+      email: user.email,
+      isVerified: user.isVerified,
+      role: user.role
     };
+
+    // Fetch role-specific data
+    if (user.role === 'jobseeker') {
+      const jobSeekerProfile = await JobSeeker.findOne({ user: user._id })
+        .populate('basicInfo locationInfo disabilityInfo workPreferences additionalInfo');
+      req.user.profile = jobSeekerProfile;
+    } else if (user.role === 'employer') {
+      const employerProfile = await Employer.findOne({ user: user._id })
+        .populate('companyInfo contactPerson pwdSupport'); // Adjust the fields here to match your Employer schema
+      req.user.profile = employerProfile;
+    } else if (user.role === 'admin') {
+      const adminProfile = await Admin.findOne({ user: user._id });
+      req.user.profile = adminProfile;
+    }
 
     next();
   } catch (error) {
@@ -34,6 +58,7 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
+// Middleware to restrict access based on roles
 export const roleMiddleware = (roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

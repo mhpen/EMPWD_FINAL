@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import JobCard from './jobCard';
+import NavSeeker from '../ui/navSeeker.js';
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
@@ -45,19 +46,8 @@ const JobList = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="bg-black text-white py-4 transition-all duration-300 ease-in-out">
-        <div className="max-w-8xl w-full mx-auto flex justify-between items-center px-8">
-          <div className="text-2xl font-bold">Logo</div>
-          <nav>
-            <ul className="flex space-x-6">
-              <li><a href="#" className="hover:text-gray-300 transition duration-200">Explore Jobs</a></li>
-              <li><a href="#" className="hover:text-gray-300 transition duration-200">Explore Companies</a></li>
-              <li><a href="#" className="hover:text-gray-300 transition duration-200">Resources</a></li>
-            </ul>
-          </nav>
-          <div className="text-xl font-bold">Roberto</div>
-        </div>
-      </header>
+
+      <NavSeeker />
 
       <div className="max-w-8xl w-full mx-auto p-8">
         {/* Search and filters */}

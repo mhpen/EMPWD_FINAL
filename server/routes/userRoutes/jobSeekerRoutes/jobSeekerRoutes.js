@@ -3,7 +3,7 @@ import { createJobSeeker, getJobSeekerById, updateJobSeeker, deleteJobSeeker } f
 
 const router = Router();
 
-router.post('/', createJobSeeker); // Create a new job seeker
+router.post('/create', createJobSeeker); // Create a new job seeker
 
 router.get('/:id', getJobSeekerById); // Get a job seeker by ID
 

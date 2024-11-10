@@ -3,6 +3,7 @@ import { Plus, Search, Star, MoreHorizontal, X, Archive, Trash2, CheckSquare } f
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "../ui/alert.js";
 
+
 const ManageJobs = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);

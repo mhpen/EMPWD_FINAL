@@ -10,7 +10,7 @@ const Header3 = () => {
         <div className="flex items-center">
           <div className="flex items-center">
             <i className="fas fa-cube text-2xl"></i>
-            <span className="ml-2 text-xl font-semibold ">photo</span>
+            <span className="ml-2 text-xl font-semibold">EmpowerPWD</span>
           </div>
         </div>
         <div className="flex items-center space-x-8">

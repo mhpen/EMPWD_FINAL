@@ -1,5 +1,5 @@
 // controllers/auth.js
-import { BasicInfo } from '../models/userModel.js';
+import { User } from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -11,7 +11,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await BasicInfo.findOne({ email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -19,7 +19,7 @@ export const login = async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Incorrect password!' });
     }
 
     if (!process.env.JWT_SECRET) {
@@ -30,7 +30,8 @@ export const login = async (req, res) => {
       { 
         userId: user._id,
         role: user.role,
-        email: user.email 
+        email: user.email,
+        isVerified: user.isVerified // Add isVerified status to token
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -49,7 +50,8 @@ export const login = async (req, res) => {
       message: 'Login successful',
       token, // Send token in response for localStorage
       userId: user._id,
-      role: user.role
+      role: user.role,
+      isVerified: user.isVerified // Send isVerified status in response
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -97,7 +99,8 @@ export const checkAuth = (req, res) => {
       success: true,
       userId: decoded.userId,
       role: decoded.role,
-      email: decoded.email
+      email: decoded.email,
+      isVerified: decoded.isVerified // Include isVerified status in auth check
     });
   } catch (error) {
     console.error('Auth check error:', error);
