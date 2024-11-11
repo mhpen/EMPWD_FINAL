@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
 const jobSchema = new mongoose.Schema({
-  employersId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Add employerId reference
+  employersId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employer', required: true }, // Add employerId reference
   jobTitle: { type: String, required: true },
+  
   jobDescription: { type: String, required: true },
   jobLocation: { type: String, required: true },
-  industry: { type: String, required: true },
+  industry: { type: [String], required: true },
   employmentType: { type: String, required: true },
   applicationDeadline: { type: Date, required: true },
   keySkills: { type: [String], default: [] },

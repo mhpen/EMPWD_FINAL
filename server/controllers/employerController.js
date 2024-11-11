@@ -4,13 +4,20 @@ import {
   CompanyInfo, 
   ContactPerson, 
   JobPosting, 
-  PWDSupport, 
+  PWDSupport,   
   Employer, 
   ActivityLog 
 } from '../models/userModel.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs/promises';
+import path from 'path';
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 // Custom error class for better error handling
 class EmployerError extends Error {
   constructor(message, statusCode = 500, errors = []) {
@@ -123,46 +130,122 @@ export const getEmployerById = async (req, res, next) => {
   }
 };
 
-/**
- * Create new employer with transaction support
- */
 export const createEmployer = async (req, res, next) => {
   try {
-    const { 
-      email, 
-      password,
-      companyInfo,
-      contactPerson,
-      pwdSupport
-    } = req.body;
+    const { email, password, companyInfo, contactPerson, pwdSupport } = req.body;
 
-    // Check if email already exists
-    const existingUser = await User.findOne({ email });
+    // Log incoming request data
+    console.log("Attempting to create employer with email:", email);
+
+    // Validate required fields
+    if (!email || !password || !companyInfo || !contactPerson) {
+      throw new EmployerError('Missing required fields', 400);
+    }
+
+    // Convert email to lowercase for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Debug log for email check
+    console.log("Checking for existing user with email:", normalizedEmail);
+
+    // Check if email already exists with detailed logging
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       throw new EmployerError('Email already registered', 409);
     }
 
-    // Create all documents without transaction
+    // Validate CompanyInfo required fields
+    if (!companyInfo.companyName || !companyInfo.industry || 
+        !companyInfo.companySize || !companyInfo.companyDescription) {
+      throw new EmployerError('Missing required company information', 400);
+    }
+
+    // Validate company address
+    if (!companyInfo.companyAddress?.street || !companyInfo.companyAddress?.city ||
+        !companyInfo.companyAddress?.province || !companyInfo.companyAddress?.country ||
+        !companyInfo.companyAddress?.postalCode) {
+      throw new EmployerError('Missing required company address information', 400);
+    }
+
+    // Validate ContactPerson required fields
+    if (!contactPerson.fullName || !contactPerson.position || 
+        !contactPerson.phoneNumber || !contactPerson.email) {
+      throw new EmployerError('Missing required contact person information', 400);
+    }
+
+    console.log("Creating new user with email:", normalizedEmail);
+
+    // Create user with hashed password
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
-      role: 'employer'
+      role: 'employer',
+      isVerified: false
     });
 
-    const newCompanyInfo = await CompanyInfo.create(companyInfo);
-    const newContactPerson = await ContactPerson.create(contactPerson);
-    const newPwdSupport = await PWDSupport.create(pwdSupport);
+    console.log("Successfully created user:", user._id);
 
+    // Handle file uploads if they exist
+    const uploadedDocuments = [];
+    if (req.files) {
+      for (const [fieldName, files] of Object.entries(req.files)) {
+        const file = files[0];
+        const documentType = {
+          'companyLogo': 'Company Logo',
+          'otherDocs': 'Other'
+        }[fieldName];
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = uniqueSuffix + '-' + file.originalname;
+        const filepath = path.join(__dirname, '../../uploads', filename);
+
+        await fs.writeFile(filepath, file.buffer);
+
+        uploadedDocuments.push({
+          documentType,
+          fileName: filename,
+          filePath: filepath,
+          contentType: file.mimetype
+        });
+      }
+    }
+
+    // Create company related documents
+    const newCompanyInfo = await CompanyInfo.create({
+      ...companyInfo,
+      departments: companyInfo.departments || [],
+      documents: uploadedDocuments
+    });
+
+    const newContactPerson = await ContactPerson.create({
+      ...contactPerson,
+      alternativePhoneNumber: contactPerson.alternativePhoneNumber || '',
+      linkedIn: contactPerson.linkedIn || '',
+      department: contactPerson.department || ''
+    });
+
+    // Create PWDSupport if provided
+    let newPwdSupport;
+    if (pwdSupport) {
+      newPwdSupport = await PWDSupport.create({
+        accessibilityFeatures: pwdSupport.accessibilityFeatures || '',
+        remoteWorkOptions: pwdSupport.remoteWorkOptions || false,
+        supportPrograms: pwdSupport.supportPrograms || '',
+        additionalInfo: pwdSupport.additionalInfo || ''
+      });
+    }
+
+    // Create employer profile
     const employer = await Employer.create({
       user: user._id,
       companyInfo: newCompanyInfo._id,
       contactPerson: newContactPerson._id,
-      pwdSupport: newPwdSupport._id
+      pwdSupport: newPwdSupport ? newPwdSupport._id : undefined
     });
 
-    // Create initial company user (owner)
-    await CompanyUser.create({
+    // Create initial company user (owner) with full permissions
+    const companyUser = await CompanyUser.create({
       user: user._id,
       employer: employer._id,
       role: 'owner',
@@ -179,20 +262,31 @@ export const createEmployer = async (req, res, next) => {
         'manage_billing',
         'send_messages'
       ],
-      status: 'active'
+      status: 'active',
+      lastLogin: new Date()
     });
 
-    await logActivity(user._id, employer._id, 'user_added', 'Created new employer account', req);
-    
-    res.status(201).json(formatResponse(employer, 'Employer created successfully'));
+    // Log the activity
+    await logActivity(companyUser._id, employer._id, 'user_added', {
+      action: 'Created new employer account',
+      companyName: companyInfo.companyName
+    }, req);
+
+    // Return response with populated employer data
+    const populatedEmployer = await Employer.findById(employer._id)
+      .populate('companyInfo')
+      .populate('contactPerson')
+      .populate('pwdSupport');
+
+    console.log("Successfully created employer account");
+    res.status(201).json(formatResponse(populatedEmployer, 'Employer created successfully'));
   } catch (error) {
+    console.error("Error in createEmployer:", { message: error.message, stack: error.stack, details: error });
     next(error);
   }
 };
 
-/**
- * Update employer with partial updates
- */
+
 export const updateEmployer = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();

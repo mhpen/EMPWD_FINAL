@@ -4,56 +4,162 @@ import {
   LocationInfo, 
   DisabilityInfo, 
   WorkPreferences, 
-  JobSeekerAdditionalInfo, 
   JobSeeker 
 } from '../models/userModel.js';
 import bcrypt from 'bcrypt';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Create a new job seeker
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 export const createJobSeeker = async (req, res) => {
   try {
-    const { basicInfo, locationInfo, disabilityInfo, workPreferences, additionalInfo, email, password, role } = req.body;
+    const {
+      email, password, confirmPassword, role,
+      firstName, lastName, dateOfBirth, gender, age,
+      country, city, postal, address,
+      disabilityType, disabilityAdditionalInfo,
+      preferredJobTitles, industry, employmentType,
+      profilePicture
+    } = req.body;  // Removed documents from destructuring
 
-    // Validate required fields
-    if (!basicInfo || !locationInfo || !email || !password) {
-      return res.status(400).json({ error: 'Basic info, location info, email, and password are required' });
+    const basicInfo = { firstName, lastName, dateOfBirth, gender, age, profilePicture };
+    const locationInfo = { country, city, postal, address };
+    const disabilityInfo = { disabilityType: [disabilityType], disabilityAdditionalInfo };
+    const workPreferences = { preferredJobTitles: [preferredJobTitles], industry: [industry], employmentType };
+
+    // Function to check for missing required fields
+    const checkMissingFields = (obj, requiredFields) => {
+      return requiredFields.filter(field => !obj || !obj[field]);
+    };
+
+    // Check for missing required fields
+    const missingFields = {
+      user: checkMissingFields({ email, password }, ['email', 'password']),
+      basicInfo: checkMissingFields(basicInfo, ['firstName', 'lastName', 'dateOfBirth', 'gender', 'age']),
+      locationInfo: checkMissingFields(locationInfo, ['country', 'city', 'postal', 'address']),
+      disabilityInfo: checkMissingFields(disabilityInfo, ['disabilityType']),
+      workPreferences: checkMissingFields(workPreferences, ['preferredJobTitles', 'industry'])
+    };
+
+    console.log('Missing required fields:', missingFields);
+
+    // If there are any missing fields, return an error
+    const allMissingFields = Object.values(missingFields).flat();
+    if (allMissingFields.length > 0) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: allMissingFields
+      });
     }
 
-    // Hash the password and create User document
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Process files if they exist
+    const uploadedDocuments = [];
+    if (req.files) {
+      for (const [fieldName, files] of Object.entries(req.files)) {
+        const file = files[0];
+        const documentType = {
+          'resume': 'Resume',
+          'pwdId': 'PWD ID',
+          'validId': 'Valid ID',
+          'otherDocs': 'Other'
+        }[fieldName];
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = uniqueSuffix + '-' + file.originalname;
+        const filepath = path.join(__dirname, '../../uploads', filename);
+        
+        await fs.writeFile(filepath, file.buffer);
+
+        uploadedDocuments.push({
+          documentType,
+          fileName: filename,
+          filePath: filepath,
+          contentType: file.mimetype
+        });
+      }
+    }
+
+
+    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser  = await User.create({
+    const newUser = await User.create({
       email,
       password: hashedPassword,
       role: role || 'jobseeker'
     });
 
-    // Create BasicInfo document and other nested documents
+    // Create related documents
     const newBasicInfo = await BasicInfo.create(basicInfo);
     const newLocationInfo = await LocationInfo.create(locationInfo);
-    const newDisabilityInfo = disabilityInfo ? await DisabilityInfo.create(disabilityInfo) : null;
-    const newWorkPreferences = workPreferences ? await WorkPreferences.create(workPreferences) : null;
-    const newAdditionalInfo = additionalInfo ? await JobSeekerAdditionalInfo.create(additionalInfo) : null;
+    const newDisabilityInfo = await DisabilityInfo.create(disabilityInfo);
+    const newWorkPreferences = await WorkPreferences.create(workPreferences);
 
-    // Create JobSeeker document with references to the nested documents and User
-    const newJobSeeker = await JobSeeker.create({
-      user: newUser ._id,
+    // Create JobSeeker document
+    let newJobSeeker = await JobSeeker.create({
+      user: newUser._id,
       basicInfo: newBasicInfo._id,
       locationInfo: newLocationInfo._id,
-      disabilityInfo: newDisabilityInfo ? newDisabilityInfo._id : null,
-      workPreferences: newWorkPreferences ? newWorkPreferences._id : null,
-      additionalInfo: newAdditionalInfo ? newAdditionalInfo._id : null
+      disabilityInfo: newDisabilityInfo._id,
+      workPreferences: newWorkPreferences._id,
+      documents: uploadedDocuments
     });
 
-    res.status(201).json(newJobSeeker);
+    // Populate the response data
+    newJobSeeker = await JobSeeker.findById(newJobSeeker._id)
+      .populate('user', '-password')
+      .populate('basicInfo')
+      .populate('locationInfo')
+      .populate('disabilityInfo')
+      .populate('workPreferences');
+
+    return res.status(201).json({
+      message: 'Job seeker profile created successfully',
+      data: newJobSeeker
+    });
+
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error in createJobSeeker:', err);
+    
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation Error',
+        details: Object.values(err.errors).map(error => ({
+          field: error.path,
+          message: error.message,
+          value: error.value
+        }))
+      });
+    }
+
+    return res.status(500).json({ 
+      error: 'Failed to create job seeker profile',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
-
-// Get a job seeker by ID
+// Other controller methods remain the same...eeker by ID
 export const getJobSeekerById = async (req, res) => {
   try {
-    //const userId = req.headers['x-user-id'];
     const { userId } = req.params;
     console.log("Received userId:", userId);
 

@@ -14,6 +14,7 @@ const JobList = () => {
   const [employmentTypeFilter, setEmploymentTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -21,6 +22,7 @@ const JobList = () => {
         setJobs(response.data.data);
         setFilteredJobs(response.data.data);
         setLoading(false);
+        
       } catch (err) {
         setError('Failed to fetch jobs. Please try again later.');
         setLoading(false);
@@ -33,7 +35,7 @@ const JobList = () => {
     const filtered = jobs.filter((job) =>
       job.jobTitle.toLowerCase().includes(searchTitle.toLowerCase()) &&
       job.jobLocation.toLowerCase().includes(searchLocation.toLowerCase()) &&
-      (industryFilter === '' || job.industry === industryFilter) &&
+      (industryFilter === '' || job.industry.includes(industryFilter)) && 
       (employmentTypeFilter === '' || job.employmentType === employmentTypeFilter) &&
       (statusFilter === '' || job.jobStatus === statusFilter)
     );
@@ -45,7 +47,7 @@ const JobList = () => {
   if (error) return <div className="text-red-500 text-center py-10">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 font-poppins">
 
       <NavSeeker />
 
@@ -78,8 +80,8 @@ const JobList = () => {
             >
               <option value="">Industry</option>
               <option value="Technology">Technology</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="retail">Retail</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Retail">Retail</option>
             </select>
             <select
               className="bg-gray-300 outline-none px-4 py-2 rounded hover:bg-gray-200 transition-colors duration-200 ease-in-out"
@@ -87,9 +89,9 @@ const JobList = () => {
               onChange={(e) => setEmploymentTypeFilter(e.target.value)}
             >
               <option value="">Employment Type</option>
-              <option value="fulltime">Full-time</option>
-              <option value="parttime">Part-time</option>
-              <option value="contract">Contract</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Contract">Contract</option>
               <option value="Internship">Internship</option>
 
             </select>

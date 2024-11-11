@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const applicationSchema = new mongoose.Schema({
   jobseeker: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'BasicInfo',  
+    ref: 'User',  
     required: true
   },
   jobId: {
@@ -35,8 +35,8 @@ const applicationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'reviewed', 'accepted', 'rejected'],
-    default: 'pending'
+    enum: ['Pending', 'reviewed', 'accepted', 'rejected'],
+    default: 'Pending'
   }
 }, {
   timestamps: true
@@ -46,5 +46,4 @@ const applicationSchema = new mongoose.Schema({
 applicationSchema.index({ jobseeker: 1, jobId: 1 }, { unique: true });
 
 const Application = mongoose.model('Application', applicationSchema);
-
-export default Application;
+export default Application;  // Export the model directly

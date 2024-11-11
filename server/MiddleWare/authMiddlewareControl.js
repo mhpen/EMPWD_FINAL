@@ -1,47 +1,53 @@
 // middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
-import { User, JobSeeker, Employer, Admin } from '../models/userModel.js'; // Adjust the path if necessary
+import { User, JobSeeker, Employer, Admin } from '../models/userModel.js';
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    // Check for token in both cookies and Authorization header
+    // Check for token in cookies or Authorization header
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token',
+      });
+    }
 
-    // Fetch user data from the database
+    // Fetch user data
     const user = await User.findById(decoded.userId);
-    
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
-    // Attach basic user data to request
+    // Attach user data to the request
     req.user = {
-      _id: user._id,
-      email: user.email,
-      isVerified: user.isVerified,
-      role: user.role
+      _id: decoded.userId,
+      role: decoded.role,
+      email: decoded.email,
+      isVerified: decoded.isVerified,
     };
 
     // Fetch role-specific data
     if (user.role === 'jobseeker') {
       const jobSeekerProfile = await JobSeeker.findOne({ user: user._id })
-        .populate('basicInfo locationInfo disabilityInfo workPreferences additionalInfo');
+        .populate('basicInfo locationInfo disabilityInfo workPreferences');
       req.user.profile = jobSeekerProfile;
     } else if (user.role === 'employer') {
       const employerProfile = await Employer.findOne({ user: user._id })
-        .populate('companyInfo contactPerson pwdSupport'); // Adjust the fields here to match your Employer schema
+        .populate('companyInfo contactPerson pwdSupport');
       req.user.profile = employerProfile;
     } else if (user.role === 'admin') {
       const adminProfile = await Admin.findOne({ user: user._id });
@@ -53,7 +59,7 @@ export const authMiddleware = async (req, res, next) => {
     console.error('Authentication error:', error);
     return res.status(401).json({
       success: false,
-      message: 'Invalid or expired authentication'
+      message: 'Invalid or expired authentication',
     });
   }
 };
@@ -64,11 +70,12 @@ export const roleMiddleware = (roles) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied: insufficient permissions'
+        message: 'Access denied: insufficient permissions',
       });
     }
     next();
   };
 };
+
 
 export default authMiddleware;

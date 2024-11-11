@@ -2,6 +2,16 @@ import React, { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import NavEmRegister from "../ui/navEmRegister";
+import SuccessModal from '../ui/SuccessModal';
+
+const steps = [
+  { id: 1, title: 'Account Info' },
+  { id: 2, title: 'Company Info' },
+  { id: 3, title: 'Contact Info' },
+  { id: 4, title: 'Accessibility Info' },
+  { id: 5, title: 'Confirmation' }
+];
 
 const EmployerRegistrationForm = () => {
   const [formData, setFormData] = useState({  
@@ -10,7 +20,7 @@ const EmployerRegistrationForm = () => {
     confirmPassword: '',
     companyInfo: {
       companyName: '',
-      industry: '',
+      industry: [],
       companySize: '',
       website: '',
       companyAddress: {
@@ -22,7 +32,8 @@ const EmployerRegistrationForm = () => {
       },
       companyDescription: '',
       establishmentDate: '',
-      departments: [''],
+      departments: [],
+      documents:[],
     },
     contactPerson: {
       fullName: '',
@@ -31,7 +42,7 @@ const EmployerRegistrationForm = () => {
       email: '',
       alternativePhoneNumber: '',
       linkedIn: '',
-      department: ''
+      department: []
     },
     pwdSupport: {
       accessibilityFeatures: '',
@@ -44,7 +55,54 @@ const EmployerRegistrationForm = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [successMessage, setSuccessMessage] = useState(''); // New state for success message
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+
+  const industryOptions = [
+    'Technology',
+    'Healthcare',
+    'Education',
+    'Finance',
+    'Others'
+  ];
+  // Department options
+const departmentOptions = [
+  'Human Resources (HR)',
+  'Recruitment or Talent Acquisition',
+  'Hiring Managers',
+  'Training and Development',
+  'Finance',
+  'Legal/Compliance',
+  'IT Department',
+  'Marketing',
+  'Operations',
+  'Diversity and Inclusion',
+  'Others'
+];
+
+// Accessibility features options
+const accessibilityFeaturesOptions = [
+  'Wheelchair Access',
+  'Sign Language Interpretation',
+  'Assistive Technology',
+  'Accessible Restrooms',
+  'Braille Signage',
+  'Others'
+];
+
+  // States for custom industry 
+  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
+  const [otherIndustry, setOtherIndustry] = useState('');
+
+
+// States for custom department 
+const [isOtherDepartment, setIsOtherDepartment] = useState(false);
+const [otherDepartment, setOtherDepartment] = useState('');
+
+
+// States for custom accessibility feature
+const [isOtherAccessibilityFeature, setIsOtherAccessibilityFeature] = useState(false);
+const [otherAccessibilityFeature, setOtherAccessibilityFeature] = useState('');
+  
 
   const handleInputChange = (e, section, subsection = null) => {
     const { name, value, type, checked } = e.target;
@@ -77,15 +135,6 @@ const EmployerRegistrationForm = () => {
       };
     });
   };
-  const handleAddDepartment = () => {
-    setFormData(prev => ({
-      ...prev,
-      companyInfo: {
-        ...prev.companyInfo,
-        departments: [...prev.companyInfo.departments, '']
-      }
-    }));
-  };
 
   const handleDepartmentChange = (index, value) => {
     setFormData(prev => {
@@ -100,6 +149,196 @@ const EmployerRegistrationForm = () => {
       };
     });
   };
+  // Handle adding industry
+const handleAddIndustry = (e) => {
+  const selectedIndustry = e.target.value;
+
+  if (selectedIndustry === 'Others') {
+    setIsOtherIndustry(true); // Show input for custom industry
+  } else if (selectedIndustry && !formData.companyInfo.industry.includes(selectedIndustry)) {
+    setFormData((prevData) => ({
+      ...prevData,
+      companyInfo: {
+        ...prevData.companyInfo,
+        industry: [...prevData.companyInfo.industry, selectedIndustry],
+      },
+    }));
+  }
+
+  // Reset the select input after adding an industry
+  e.target.value = '';
+};
+
+// Handle adding custom industry
+const handleAddOtherIndustry = () => {
+  if (otherIndustry.trim() && !formData.companyInfo.industry.includes(otherIndustry.trim())) {
+    setFormData((prevData) => ({
+      ...prevData,
+      companyInfo: {
+        ...prevData.companyInfo,
+        industry: [...prevData.companyInfo.industry, otherIndustry.trim()],
+      },
+    }));
+    setOtherIndustry(''); // Clear the custom input field
+    setIsOtherIndustry(false); // Hide the custom input
+  }
+};
+
+// Handle removing industry
+const handleRemoveIndustry = (industryToRemove) => {
+  setFormData((prevData) => ({
+    ...prevData,
+    companyInfo: {
+      ...prevData.companyInfo,
+      industry: prevData.companyInfo.industry.filter((industry) => industry !== industryToRemove),
+    },
+  }));
+};
+// Handle adding department
+const handleAddDepartment = (e) => {
+  const selectedDepartment = e.target.value;
+
+  if (selectedDepartment === 'Others') {
+    setIsOtherDepartment(true); // Show input for custom department
+  } else if (selectedDepartment && !formData.contactPerson.department.includes(selectedDepartment)) {
+    setFormData((prevData) => ({
+      ...prevData,
+      contactPerson: {
+        ...prevData.contactPerson,
+        department: [...prevData.contactPerson.department, selectedDepartment],
+      },
+    }));
+  }
+
+  // Reset the select input after adding a department
+  e.target.value = '';
+};
+
+// Handle adding custom department
+const handleAddOtherDepartment = () => {
+  if (otherDepartment.trim() && !formData.contactPerson.department.includes(otherDepartment.trim())) {
+    setFormData((prevData) => ({
+      ...prevData,
+      contactPerson: {
+        ...prevData.contactPerson,
+        department: [...prevData.contactPerson.department, otherDepartment.trim()],
+      },
+    }));
+    setOtherDepartment(''); // Clear the custom input field
+    setIsOtherDepartment(false); // Hide the custom input
+  }
+};
+
+// Handle removing department
+const handleRemoveDepartment = (departmentToRemove) => {
+  setFormData((prevData) => ({
+    ...prevData,
+    contactPerson: {
+      ...prevData.contactPerson,
+      department: prevData.contactPerson.department.filter((department) => department !== departmentToRemove),
+    },
+  }));
+};
+// Handle adding accessibility feature
+const handleAddAccessibilityFeature = (e) => {
+  const selectedFeature = e.target.value;
+
+  if (selectedFeature === 'Others') {
+    setIsOtherAccessibilityFeature(true); // Show input for custom accessibility feature
+  } else if (selectedFeature && !formData.pwdSupport.accessibilityFeatures.includes(selectedFeature)) {
+    setFormData((prevData) => ({
+      ...prevData,
+      pwdSupport: {
+        ...prevData.pwdSupport,
+        accessibilityFeatures: [...prevData.pwdSupport.accessibilityFeatures, selectedFeature],
+      },
+    }));
+  }
+
+  // Reset the select input after adding an accessibility feature
+  e.target.value = '';
+};
+
+// Handle adding custom accessibility feature
+const handleAddOtherAccessibilityFeature = () => {
+  if (otherAccessibilityFeature.trim() && !formData.pwdSupport.accessibilityFeatures.includes(otherAccessibilityFeature.trim())) {
+    setFormData((prevData) => ({
+      ...prevData,
+      pwdSupport: {
+        ...prevData.pwdSupport,
+        accessibilityFeatures: [...prevData.pwdSupport.accessibilityFeatures, otherAccessibilityFeature.trim()],
+      },
+    }));
+    setOtherAccessibilityFeature(''); // Clear the custom input field
+    setIsOtherAccessibilityFeature(false); // Hide the custom input
+  }
+};
+
+// Handle removing accessibility feature
+const handleRemoveAccessibilityFeature = (featureToRemove) => {
+  setFormData((prevData) => ({
+    ...prevData,
+    pwdSupport: {
+      ...prevData.pwdSupport,
+      accessibilityFeatures: prevData.pwdSupport.accessibilityFeatures.filter((feature) => feature !== featureToRemove),
+    },
+  }));
+};
+
+const documentTypes = ['Company Permit', 'Tax ID', 'Certificate of Incorporation', 'Other'];
+
+const handleDocumentTypeChange = (index, value) => {
+  const updatedDocuments = [...formData.companyInfo.documents];
+  updatedDocuments[index] = {
+    ...updatedDocuments[index],
+    documentType: value,
+  };
+  setFormData({
+    ...formData,
+    companyInfo: {
+      ...formData.companyInfo,
+      documents: updatedDocuments
+    }
+  });
+};
+
+const handleFileChange = (index, file) => {
+  const updatedDocuments = [...formData.companyInfo.documents];
+  updatedDocuments[index] = {
+    ...updatedDocuments[index],
+    fileName: file.name,
+    data: file,  // Store the file object; backend can handle conversion to Buffer
+    contentType: file.type
+  };
+  setFormData({
+    ...formData,
+    companyInfo: {
+      ...formData.companyInfo,
+      documents: updatedDocuments
+    }
+  });
+};
+
+const addDocument = () => {
+  setFormData({
+    ...formData,
+    companyInfo: {
+      ...formData.companyInfo,
+      documents: [...formData.companyInfo.documents, { documentType: '', fileName: '', data: null, contentType: '' }]
+    }
+  });
+};
+
+const removeDocument = (index) => {
+  const updatedDocuments = formData.companyInfo.documents.filter((_, i) => i !== index);
+  setFormData({
+    ...formData,
+    companyInfo: {
+      ...formData.companyInfo,
+      documents: updatedDocuments
+    }
+  });
+};
   const validateStep = (step) => {
     const newErrors = {};
   
@@ -139,34 +378,39 @@ const EmployerRegistrationForm = () => {
       });
       
       if (!response.ok) throw new Error('Registration failed');
-      
-      // Handle successful registration
-      // You might want to redirect or show a success message
+      // Show success modal
+      setIsModalOpen(true);
     } catch (error) {
       setErrors({ submit: error.message });
     } finally {
       setIsSubmitting(false);
     }
   };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Optionally, redirect or reset the form
+  };
+
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <Card>
+    <div className="mx-auto p-4">
+      <NavEmRegister steps={steps} currentStep={currentStep} />
+      <Card className="rounded-xl max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Employer Registration - Step {currentStep} of 4</CardTitle>
+          <CardTitle className="font-poppins text-center">Employer Registration - Step {currentStep} of 4</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Email</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange(e)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.email && (
                     <Alert variant="destructive" className="mt-2">
@@ -176,23 +420,23 @@ const EmployerRegistrationForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Password</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Password</label>
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={(e) => handleInputChange(e)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Confirm Password</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Confirm Password</label>
                   <input
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange(e)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500"
                   />
                   {errors.confirmPassword && (
                     <Alert variant="destructive" className="mt-2">
@@ -207,43 +451,87 @@ const EmployerRegistrationForm = () => {
             {currentStep === 2 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Company Name</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Company Name</label>
                   <input
                     type="text"
                     name="companyName"
                     value={formData.companyInfo.companyName}
                     onChange={(e) => handleInputChange(e, 'companyInfo')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                 </div>
-                
+                <div className="mb-2">
+                  <label className="block mb-2 font-poppins text-[15px]">Industry</label>
+                  <select
+                    name="industry"
+                    onChange={handleAddIndustry}
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Select industry that applies</option>
+                    {industryOptions.map((industry) => (
+                      <option key={industry} value={industry}>
+                        {industry}
+                      </option>
+                    ))}
+                  </select>
+                  {isOtherIndustry && (
+                    <div className="space-y-2 mt-4">
+                      <input
+                        type="text"
+                        value={otherIndustry}
+                        onChange={(e) => setOtherIndustry(e.target.value)}
+                        placeholder="Enter your industry"
+                        className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddOtherIndustry}
+                        className="px-4 py-2 bg-black text-white rounded font-poppins"
+                      >
+                        Add Industry
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2 mt-4 mb-2">
+                    {Array.isArray(formData.companyInfo.industry) && formData.companyInfo.industry.length > 0 && (
+                      <>
+                        <h3 className="text-lg font-bold">Selected Industries:</h3>
+                        <ul>
+                          {formData.companyInfo.industry.map((industry, index) => (
+                            <li key={index} className="flex justify-between items-center pl-8 pr-2">
+                              <span>{industry}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveIndustry(industry)}
+                                className="text-black hover:text-red-700"
+                              >
+                                <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                </div>     
                 <div>
-                  <label className="block text-sm font-medium mb-1">Industry</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Company Description</label>
                   <input
                     type="text"
-                    name="industry"
-                    value={formData.companyInfo.industry}
-                    onChange={(e) => handleInputChange(e, 'companyInfo')}
-                    className="w-full p-2 border rounded-md"
+                    name="companyDescription"
+                    value={formData.companyInfo.companyDescription}
+                    onChange={(e) => handleInputChange(e, 'companyInfo')} // Corrected this line
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                 </div>
-                      <div>
-            <label className="block text-sm font-medium mb-1">Company Description</label>
-            <input
-              type="text"
-              name="companyDescription"
-              value={formData.companyInfo.companyDescription}
-              onChange={(e) => handleInputChange(e, 'companyInfo')} // Corrected this line
-              className="w-full p-2 border rounded-md"
-            />
-          </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Company Size</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Company Size</label>
                   <select
                     name="companySize"
                     value={formData.companyInfo.companySize}
                     onChange={(e) => handleInputChange(e, 'companyInfo')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   >
                     <option value="">Select size</option>
                     <option value="1-10">1-10 employees</option>
@@ -254,8 +542,7 @@ const EmployerRegistrationForm = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Company Address</label>
-                  
+                  <label className="block mb-2 font-poppins text-[15px]">Company Address</label>
                   <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
@@ -263,7 +550,7 @@ const EmployerRegistrationForm = () => {
                     placeholder="Street"
                     value={formData.companyInfo.companyAddress.street}
                     onChange={(e) => handleInputChange(e, 'companyInfo', 'companyAddress')}
-                    className="w-full p-2 border rounded-md mb-2"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                    <input
                     type="text"
@@ -271,7 +558,7 @@ const EmployerRegistrationForm = () => {
                     placeholder="City"
                     value={formData.companyInfo.companyAddress.city}
                     onChange={(e) => handleInputChange(e, 'companyInfo', 'companyAddress')}
-                    className="w-full p-2 border rounded-md mb-2"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                     <input
                       type="text"
@@ -279,7 +566,7 @@ const EmployerRegistrationForm = () => {
                       placeholder="Province"
                       value={formData.companyInfo.companyAddress.province}
                       onChange={(e) => handleInputChange(e, 'companyInfo', 'companyAddress')}
-                      className="p-2 border rounded-md"
+                      className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                     />
                     <input
                       type="text"
@@ -287,7 +574,7 @@ const EmployerRegistrationForm = () => {
                       placeholder="Country"
                       value={formData.companyInfo.companyAddress.country}
                       onChange={(e) => handleInputChange(e, 'companyInfo', 'companyAddress')}
-                      className="p-2 border rounded-md"
+                      className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                     />
                     <input
                       type="text"
@@ -295,7 +582,7 @@ const EmployerRegistrationForm = () => {
                       placeholder="Postal or Zip Code"
                       value={formData.companyInfo.companyAddress.postalCode}
                       onChange={(e) => handleInputChange(e, 'companyInfo', 'companyAddress')}
-                      className="p-2 border rounded-md"
+                      className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                     />
                   </div>
                 </div>
@@ -305,7 +592,7 @@ const EmployerRegistrationForm = () => {
 {currentStep === 3 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block mb-2 font-poppins text-[15px]">
                     Contact Person Name *
                   </label>
                   <input
@@ -313,7 +600,7 @@ const EmployerRegistrationForm = () => {
                     name="fullName"
                     value={formData.contactPerson.fullName}
                     onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.fullName && (
                     <Alert variant="destructive" className="mt-2">
@@ -323,7 +610,7 @@ const EmployerRegistrationForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block mb-2 font-poppins text-[15px]">
                     Position *
                   </label>
                   <input
@@ -331,7 +618,7 @@ const EmployerRegistrationForm = () => {
                     name="position"
                     value={formData.contactPerson.position}
                     onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.position && (
                     <Alert variant="destructive" className="mt-2">
@@ -341,7 +628,7 @@ const EmployerRegistrationForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block mb-2 font-poppins text-[15px]">
                     Phone Number *
                   </label>
                   <input
@@ -349,7 +636,7 @@ const EmployerRegistrationForm = () => {
                     name="phoneNumber"
                     value={formData.contactPerson.phoneNumber}
                     onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.phoneNumber && (
                     <Alert variant="destructive" className="mt-2">
@@ -359,7 +646,7 @@ const EmployerRegistrationForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block mb-2 font-poppins text-[15px]">
                     Email *
                   </label>
                   <input
@@ -367,7 +654,7 @@ const EmployerRegistrationForm = () => {
                     name="email"
                     value={formData.contactPerson.email}
                     onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.email && (
                     <Alert variant="destructive" className="mt-2">
@@ -377,7 +664,7 @@ const EmployerRegistrationForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block mb-2 font-poppins text-[15px]">
                     linkedIn
                   </label>
                   <input
@@ -385,7 +672,7 @@ const EmployerRegistrationForm = () => {
                     name="linkedIn"
                     value={formData.contactPerson.linkedIn}
                     onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                   />
                   {errors.linkedIn && (
                     <Alert variant="destructive" className="mt-2">
@@ -394,38 +681,127 @@ const EmployerRegistrationForm = () => {
                     </Alert>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Department
-                  </label>
-                  <input
-                    type="text"
-                    name="department"
-                    value={formData.contactPerson.department}
-                    onChange={(e) => handleInputChange(e, 'contactPerson')}
-                    className="w-full p-2 border rounded-md"
-                  />
-                  {errors.department && (
-                    <Alert variant="destructive" className="mt-2">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{errors.department}</AlertDescription>
-                    </Alert>
-                  )}
-                </div>
+                  <div className="mb-2">
+                    <label className="block mb-2 font-poppins text-[15px]">Department</label>
+                    <select
+                      name="department"
+                      onChange={handleAddDepartment}
+                      className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select department that applies</option>
+                      {departmentOptions.map((department) => (
+                        <option key={department} value={department}>
+                          {department}
+                        </option>
+                      ))}
+                    </select>
+                    {isOtherDepartment && (
+                      <div className="space-y-2 mt-4">
+                        <input
+                          type="text"
+                          value={otherDepartment}
+                          onChange={(e) => setOtherDepartment(e.target.value)}
+                          placeholder="Enter your department"
+                          className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddOtherDepartment}
+                          className="px-4 py-2 bg-black text-white rounded font-poppins"
+                        >
+                          Add Department
+                        </button>
+                      </div>
+                    )}
+                    <div className="space-y-2 mt-4 mb-2">
+                      {Array.isArray(formData.contactPerson.department) && formData.contactPerson.department.length > 0 && (
+                        <>
+                          <h3 className="text-lg font-bold">Selected Departments:</h3>
+                          <ul>
+                            {formData.contactPerson.department.map((department, index) => (
+                              <li key={index} className="flex justify-between items-center pl-8 pr-2">
+                                <span>{department}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDepartment(department)}
+                                  className="text-black hover:text-red-700"
+                                >
+                                  <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                    {errors.department && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{errors.department}</AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+               
               </div>
             )}
 
 {currentStep === 4 && (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Accessibility Features</label>
-                  <textarea
+                <div className="mb-2">
+                  <label className="block mb-2 font-poppins text-[15px]">Accessibility Features</label>
+                  <select
                     name="accessibilityFeatures"
-                    value={formData.pwdSupport.accessibilityFeatures}
-                    onChange={(e) => handleInputChange(e, 'pwdSupport')}
-                    className="w-full p-2 border rounded-md"
-                    rows="3"
-                  />
+                    onChange={handleAddAccessibilityFeature}
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Select accessibility feature that applies</option>
+                    {accessibilityFeaturesOptions.map((feature) => (
+                      <option key={feature} value={feature}>
+                        {feature}
+                      </option>
+                    ))}
+                  </select>
+                  {isOtherAccessibilityFeature && (
+                    <div className="space-y-2 mt-4">
+                      <input
+                        type="text"
+                        value={otherAccessibilityFeature}
+                        onChange={(e) => setOtherAccessibilityFeature(e.target.value)}
+                        placeholder="Enter your accessibility feature"
+                        className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddOtherAccessibilityFeature}
+                        className="px-4 py-2 bg-black text-white rounded font-poppins"
+                      >
+                        Add Accessibility Feature
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2 mt-4 mb-2">
+                    {Array.isArray(formData.pwdSupport.accessibilityFeatures) && formData.pwdSupport.accessibilityFeatures.length > 0 && (
+                      <>
+                        <h3 className="text-lg font-bold">Selected Accessibility Features:</h3>
+                        <ul>
+                          {formData.pwdSupport.accessibilityFeatures.map((feature, index) => (
+                            <li key={index} className="flex justify-between items-center pl-8 pr-2">
+                              <span>{feature}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAccessibilityFeature(feature)}
+                                className="text-black hover:text-red-700"
+                              >
+                                <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input
@@ -435,28 +811,74 @@ const EmployerRegistrationForm = () => {
                     onChange={(e) => handleInputChange(e, 'pwdSupport')}
                     className="h-4 w-4"
                   />
-                  <label className="text-sm font-medium">Remote Work Options Available</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Remote Work Options Available</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Support Programs</label>
+                  <label className="block mb-2 font-poppins text-[15px]">Support Programs</label>
                   <textarea
                     name="supportPrograms"
                     value={formData.pwdSupport.supportPrograms}
                     onChange={(e) => handleInputChange(e, 'pwdSupport')}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                     rows="3"
                   />
                 </div>
+                <div className="form-group mt-4">
+        <label>Company Documents</label>
+        {formData.companyInfo.documents.map((document, index) => (
+          <div key={index} className="document-entry border p-4 mt-2">
+            <label htmlFor={`DocumentType-${index}`}>Select Document Type</label>
+            <select
+              id={`DocumentType-${index}`}
+              value={document.documentType}
+              onChange={(e) => handleDocumentTypeChange(index, e.target.value)}
+              className="border rounded p-2 w-full"
+            >
+              <option value="" disabled>Select a Document Type</option>
+              {documentTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+
+            {document.documentType && (
+              <div className="mt-2">
+                <label htmlFor={`companyDocument-${index}`}>Upload {document.documentType}</label>
+                <input
+                  type="file"
+                  id={`companyDocument-${index}`}
+                  onChange={(e) => handleFileChange(index, e.target.files[0])}
+                  className="border p-2 w-full"
+                />
+              </div>
+            )}
+
+            <button 
+              type="button" 
+              onClick={() => removeDocument(index)} 
+              className="mt-2 text-red-500"
+            >
+              Remove Document
+            </button>
+          </div>
+        ))}
+
+        <button type="button" onClick={addDocument} className="mt-4 p-2 bg-blue-500 text-white rounded">
+          Add Another Document
+        </button>
+      </div>
+
               </div>
             )}
 
           </form>
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-end  mt-8 mx-auto max-w-2xl">
           {currentStep > 1 && (
             <button
               onClick={() => setCurrentStep(prev => prev - 1)}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+              className="w-24 px-4 py-2 text-sm font-medium text-gray-700 bg-white border  border-black rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black mr-4 font-poppins"
             >
               Back
             </button>
@@ -464,12 +886,13 @@ const EmployerRegistrationForm = () => {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="w-24 px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black font-poppins"
           >
             {currentStep === 4 ? (isSubmitting ? 'Registering...' : 'Register') : 'Next'}
           </button>
         </CardFooter>
       </Card>
+      <SuccessModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </div>
   );
 };

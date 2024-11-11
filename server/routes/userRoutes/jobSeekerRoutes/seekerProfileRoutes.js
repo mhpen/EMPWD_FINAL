@@ -1,12 +1,30 @@
+// routes/jobSeekerProfile.js
+
 import express from 'express';
 import SeekerProfile from '../../../controllers/seekerProfile.js';
-import authMiddleware from '../../../middleware/authMiddlewareControl.js';  // Note: Check case sensitivity
+import { authMiddleware, roleMiddleware } from '../../../middleware/authMiddlewareControl.js';
 
 const router = express.Router();
 
-// Ensure these routes are properly defined
-router.get('/profile', authMiddleware, SeekerProfile.getUserProfile);  // Changed from /user to /profile
-router.put('/profile', authMiddleware, SeekerProfile.updateUserProfile);
+router.get(
+  '/profile',
+  authMiddleware,
+  roleMiddleware(['jobseeker']),
+  SeekerProfile.getUserProfile
+);
+
+router.get(
+  '/applications',  // Route to fetch all applications
+  authMiddleware,
+  roleMiddleware(['jobseeker']),
+  SeekerProfile.getAllApplications
+);
+
+router.get(
+  '/application/:applicationId',  
+  authMiddleware,
+  roleMiddleware(['jobseeker']),
+  SeekerProfile.getApplicationDetails
+);
 
 export default router;
-

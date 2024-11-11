@@ -7,7 +7,7 @@ const JobCard = ({ job }) => {
   const jobId = job._id ? job._id.toString() : '';
 
   return (
-    <div className="bg-white p-4 rounded shadow-sm">
+    <div className="bg-white p-4 rounded shadow-sm font-poppins">
       <h2 className="text-xl font-semibold text-gray-900 mb-2">
         {job.jobTitle}
       </h2>
@@ -37,7 +37,7 @@ const JobCard = ({ job }) => {
         </span>
         <Link
           to={`/jobs/${jobId}`}
-          className="bg-black text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
         >
           View Details
         </Link>

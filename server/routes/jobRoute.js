@@ -22,8 +22,8 @@ router.use(authMiddleware);
 router.get('/search', searchJobs);
 router.get('/:jobId', getJobById);
 
-// Employer-only routes
-router.use(roleMiddleware(['employer']));
+// Employer and Admin routes
+router.use(roleMiddleware(['employer', 'admin']));
 
 // Job CRUD operations
 router.post('/create', createJob);
@@ -31,12 +31,16 @@ router.get('/employer/:employerId', getEmployerJobs);
 router.get('/applications/:jobId', getJobApplications);
 
 // Edit-related routes
-router.patch('/:jobId/update', updateJob); // Route for updating individual fields
+router.patch('/:jobId/update', updateJob);
 router.patch('/:jobId/status', updateJobStatus);
 router.patch('/:jobId/is-starred', updateJobStarStatus);
 
 // Delete routes
 router.delete('/delete-job/:jobId', deleteJob);
+
+// Admin-only routes
+router.use(roleMiddleware(['admin']));
+
 router.delete('/delete-multiple', deleteMultipleJobs);
 
 export default router;

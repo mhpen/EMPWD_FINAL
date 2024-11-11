@@ -13,7 +13,8 @@ const BasicInfoSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
   gender: { type: String, enum: ['male', 'female', 'other'], required: true },
-  age: { type: Number, required: true }
+  age: { type: Number, required: true },
+  profilePicture: String
 }, { timestamps: true });
 
 const LocationInfoSchema = new mongoose.Schema({
@@ -25,19 +26,14 @@ const LocationInfoSchema = new mongoose.Schema({
 
 // Job Seeker specific schemas
 const DisabilityInfoSchema = new mongoose.Schema({
-  disabilityType: { type: String },
+  disabilityType: { type: [String ], required: true},
   disabilityAdditionalInfo: String
 }, { timestamps: true });
 
 const WorkPreferencesSchema = new mongoose.Schema({
   preferredJobTitles: { type: [String], required: true },
-  industry: String,
+  industry:{ type: [String], required: true} ,
   employmentType: String
-}, { timestamps: true });
-
-const JobSeekerAdditionalInfoSchema = new mongoose.Schema({
-  profilePicture: String,
-  resumeUrl: String
 }, { timestamps: true });
 
 // Updated JobSeeker schema
@@ -47,7 +43,8 @@ const JobSeekerSchema = new mongoose.Schema({
   locationInfo: { type: mongoose.Schema.Types.ObjectId, ref: 'LocationInfo' },
   disabilityInfo: { type: mongoose.Schema.Types.ObjectId, ref: 'DisabilityInfo' },
   workPreferences: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkPreferences' },
-  additionalInfo: { type: mongoose.Schema.Types.ObjectId, ref: 'JobSeekerAdditionalInfo' }
+  documents: [{
+  }]
 }, { timestamps: true });
 
 // Company User Schema (New)
@@ -59,7 +56,7 @@ const CompanyUserSchema = new mongoose.Schema({
     enum: ['owner', 'admin', 'moderator', 'recruiter', 'viewer'],
     required: true 
   },
-  permissions: [{
+  permissions: [{ 
     type: String,
     enum: [
       'manage_jobs',
@@ -95,7 +92,7 @@ const CompanyUserSchema = new mongoose.Schema({
 
 const CompanyInfoSchema = new mongoose.Schema({
   companyName: { type: String, required: true },
-  industry: { type: String, required: true },
+  industry: { type: [String], required: true }, // Changed to array of strings
   companySize: { type: String, required: true },
   website: String,
   companyAddress: {
@@ -108,18 +105,20 @@ const CompanyInfoSchema = new mongoose.Schema({
   companyDescription: { type: String, required: true },
   establishmentDate: Date,
   companyLogo: String,
-  departments: [String], // Added departments array
-  companyPermit: { type: Buffer } // Added company permit as a blob
+  departments: [String],
+  documents: [{
+    // Your document schema here
+  }]
 }, { timestamps: true });
 
 const ContactPersonSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   position: { type: String, required: true },
   phoneNumber: { type: String, required: true },
-  email: { type: String, required: true },
   alternativePhoneNumber: String,
+  email: { type: String, required: true },
   linkedIn: String,
-  department: String
+  department: { type: [String], default: [] } // Changed to array of strings
 }, { timestamps: true });
 
 const JobPostingSchema = new mongoose.Schema({
@@ -129,19 +128,17 @@ const JobPostingSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const PWDSupportSchema = new mongoose.Schema({
-  accessibilityFeatures: String,
-  remoteWorkOptions: Boolean,
-  supportPrograms: String,
-  additionalInfo: String
+  accessibilityFeatures: { type: [String], default: [] }, // Changed to array of strings
+  remoteWorkOptions: { type: Boolean, default: false },
+  supportPrograms: { type: [String], default: [] }, // Also making this an array
+  additionalInfo: { type: String, default: '' }
 }, { timestamps: true });
-
 // Updated Employer schema with company users
 const EmployerSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   companyInfo: { type: mongoose.Schema.Types.ObjectId, ref: 'CompanyInfo', required: true },
   contactPerson: { type: mongoose.Schema.Types.ObjectId, ref: 'ContactPerson', required: true },
   pwdSupport: { type: mongoose.Schema.Types.ObjectId, ref: 'PWDSupport' },
-
 }, { timestamps: true });
 
 // Activity Log Schema for tracking user actions (New)
@@ -151,17 +148,6 @@ const ActivityLogSchema = new mongoose.Schema({
   action: { 
     type: String, 
     required: true,
-    enum: [
-      'user_added',
-      'user_removed',
-      'user_role_updated',
-      'job_posted',
-      'job_updated',
-      'job_deleted',
-      'profile_updated',
-      'login',
-      'logout'
-    ]
   },
   details: mongoose.Schema.Types.Mixed,
   ipAddress: String
@@ -186,7 +172,6 @@ const BasicInfo = mongoose.model('BasicInfo', BasicInfoSchema);
 const LocationInfo = mongoose.model('LocationInfo', LocationInfoSchema);
 const DisabilityInfo = mongoose.model('DisabilityInfo', DisabilityInfoSchema);
 const WorkPreferences = mongoose.model('WorkPreferences', WorkPreferencesSchema);
-const JobSeekerAdditionalInfo = mongoose.model('JobSeekerAdditionalInfo', JobSeekerAdditionalInfoSchema);
 const JobSeeker = mongoose.model('JobSeeker', JobSeekerSchema);
 
 const AdminSchema = new mongoose.Schema({
@@ -214,8 +199,7 @@ export {
   LocationInfo,
   DisabilityInfo,
   WorkPreferences,
-  JobSeeker,
-  JobSeekerAdditionalInfo
+  JobSeeker
 };
 
 

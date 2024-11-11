@@ -2,6 +2,9 @@ import React from 'react';
 import { Link } from "react-router-dom";
 //import logo from "../../assets/logo3.png";
 
+
+
+
 const HomePageComponent = () => {
    const [isOpen, setIsOpen] = React.useState(false);
 
@@ -19,11 +22,8 @@ const HomePageComponent = () => {
             </p>
          </div>
    );
-
-
-
    return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white font-poppins">
          <header className="flex justify-between items-center p-6">
             <div className="flex items-center space-x-4">
                <div className="flex items-center">
@@ -69,7 +69,7 @@ const HomePageComponent = () => {
                <div className="relative flex justify-center items-center">
                      <div className="w-[550px] h-[320px] bg-gray-300 rounded-lg flex items-center justify-center z-10">
                         <div className="w-full h-full border border-black">
-                           <img className="w-full h-full object-cover " src="" alt="Main placeholder image" /></div>
+                           <img className="w-full h-full object-cover " scr="" alt="image" /></div>
                      </div>
 
                      {/* Left Image (400x350) */}

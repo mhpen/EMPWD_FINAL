@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
+import { useNavigate, Link } from 'react-router-dom';
+import NavEmployer from '../ui/navEmployer.js';
 
 const Header = () => {
   return (
@@ -30,11 +31,14 @@ const Header = () => {
 const CreateJobPosting = () => {
   const [step, setStep] = useState(1);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     jobTitle: '',
     jobDescription: '',
     jobLocation: 'Remote',
-    industry: '',
+    industry: [],
     employmentType: 'Full-time',
     applicationDeadline: '',
     keySkills: [],
@@ -49,6 +53,119 @@ const CreateJobPosting = () => {
     specialAccommodations: ''
   });
 
+    // Industry options
+    const industryOptions = [
+      'Technology',
+      'Healthcare',
+      'Education',
+      'Finance',
+      'Manufacturing',
+      'Retail',
+      'Others'
+    ];
+
+      // Predefined benefits options
+const benefitOptions = [
+  'Health Insurance',
+  'Disability Insurance',
+  'Pag-IBIG Fund Membership',
+  'Free Annual Check-Ups',
+  'Mental Health Support Services',,
+  'Supportive Work Environment',
+  'Flexible Leave Policies',
+  'Transportation Assistance',
+  'Performance-Based Incentives',
+  'Accommodation Stipend or Benefits',
+  'Emergency Medical Assistance',
+  'Return-to-Work Support for Medical Leave',
+  'Family Support Programs',
+  'Relocation Assistance for Accessible Housing',
+  'Disability Inclusion Initiatives',
+  'Accommodations for Medical Needs',
+  'Job Sharing Opportunities',
+  '13th Month Pay',
+  'Holiday Pay and Bonuses',
+  'Overtime Pay',
+  'Meal and Transportation Allowances',
+  'Sick Leave and Vacation Leave',
+  'Others'
+];
+
+  // Define available key skills options
+  const keySkillsOptions = [
+    'Communication', 'Teamwork', 'Problem Solving', 
+    'Time Management', 'Adaptability', 'Creativity', 
+    'Technical Skills', 'Leadership', 'Project Management', 
+    'Attention to Detail', 'Customer Service', 'Analytical Thinking',
+    'Organization', 'Decision Making', 'Interpersonal Skills'
+  ];
+
+  // Define available accessibility features options
+const accessibilityFeaturesOptions = [
+  'Wheelchair Accessible',
+  'Vision Impaired Access',
+  'Hearing Impaired Access',
+  'Assistive Technology',
+  'Accessible Parking',
+  'Restroom Accessibility',
+  'Braille Signage',
+  'Audio Description',
+  'Other'
+];
+
+  
+
+  
+
+  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
+  const [otherIndustry, setOtherIndustry] = useState('');
+
+  const [isOtherBenefit, setIsOtherBenefit] = useState(false);
+  const [otherBenefit, setOtherBenefit] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // State to manage selected accessibility features and custom input
+const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState([]);
+const [isOtherFeature, setIsOtherFeature] = useState(false);
+const [otherFeature, setOtherFeature] = useState('');
+
+  // handle adding industry
+const handleAddIndustry = (e) => {
+  const selectedIndustry = e.target.value;
+
+  if (selectedIndustry === 'Others') {
+    setIsOtherIndustry(true); // Show input for custom industry
+  } else if (selectedIndustry && !formData.industry.includes(selectedIndustry)) {
+    setFormData((prevData) => ({
+      ...prevData,
+      industry: [...prevData.industry, selectedIndustry],
+    }));
+  }
+
+  // Reset the select input after adding an industry
+  e.target.value = '';
+};
+
+// handle adding custom industry
+const handleAddOtherIndustry = () => {
+  if (otherIndustry.trim() && !formData.industry.includes(otherIndustry.trim())) {
+    setFormData((prevData) => ({
+      ...prevData,
+      industry: [...prevData.industry, otherIndustry.trim()],
+    }));
+    setOtherIndustry(''); // Clear the custom input field
+    setIsOtherIndustry(false); // Hide the custom input
+  }
+};
+
+  // Handle removing an industry
+  const handleRemoveIndustry = (industryToRemove) => {
+    // Update the formData by filtering out the industry to remove
+    setFormData((prevData) => ({
+      ...prevData,
+      industry: prevData.industry.filter((industry) => industry !== industryToRemove),
+    }));
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -57,6 +174,95 @@ const CreateJobPosting = () => {
     }));
   };
   const userId = localStorage.getItem('userId');
+
+    // Handle removing a skill
+    const handleRemoveSkill = (skillToRemove) => {
+      // Update the formData by filtering out the skill to remove
+      const updatedSkills = formData.keySkills.filter((skill) => skill !== skillToRemove);
+  
+      // Update the state with the new array of key skills
+      setFormData((prevData) => ({
+        ...prevData,
+        keySkills: updatedSkills,
+      }));
+    };
+
+  // Handle adding selected benefit
+  const handleAddBenefit = (benefit) => {
+    if (benefit === 'Others') {
+      setIsOtherBenefit(true);
+    } else if (benefit && !formData.benefits.includes(benefit)) {
+      setFormData((prevData) => ({
+        ...prevData,
+        benefits: [...prevData.benefits, benefit],
+      }));
+    }
+    setIsDropdownOpen(false); // Close dropdown after selection
+  };
+
+  // Handle adding custom benefit
+  const handleAddOtherBenefit = () => {
+    if (otherBenefit.trim() && !formData.benefits.includes(otherBenefit.trim())) {
+      setFormData((prevData) => ({
+        ...prevData,
+        benefits: [...prevData.benefits, otherBenefit.trim()],
+      }));
+      setOtherBenefit(''); // Clear input
+      setIsOtherBenefit(false); // Hide input
+    }
+  };
+
+  // Handle removing benefit
+  const handleRemoveBenefit = (benefitToRemove) => {
+    // Update the formData by filtering out the benefit to remove
+    const updatedBenefits = formData.benefits.filter(
+      (benefit) => benefit !== benefitToRemove
+    );
+  
+    // Update the state with the new array of benefits
+    setFormData((prevData) => ({
+      ...prevData,
+      benefits: updatedBenefits,
+    }));
+  };
+// Handle adding an accessibility feature from the dropdown
+const handleAddAccessibilityFeature = (e) => {
+  const selectedFeature = e.target.value;
+
+  if (selectedFeature === 'Other') {
+    setIsOtherFeature(true); // Show input for custom feature
+  } else if (selectedFeature && !formData.accessibilityFeatures.includes(selectedFeature)) {
+    setFormData((prevData) => ({
+      ...prevData,
+      accessibilityFeatures: [...prevData.accessibilityFeatures, selectedFeature],
+    }));
+  }
+
+  // Reset the select input after adding a feature
+  e.target.value = '';
+};
+
+// Handle adding custom accessibility feature
+const handleAddOtherFeature = () => {
+  if (otherFeature.trim() && !formData.accessibilityFeatures.includes(otherFeature.trim())) {
+    setFormData((prevData) => ({
+      ...prevData,
+      accessibilityFeatures: [...prevData.accessibilityFeatures, otherFeature.trim()],
+    }));
+    setOtherFeature(''); // Clear the custom input field
+    setIsOtherFeature(false); // Hide the custom input
+  }
+};
+
+// Handle removing an accessibility feature
+const handleRemoveFeature = (featureToRemove) => {
+  setFormData((prevData) => ({
+    ...prevData,
+    accessibilityFeatures: prevData.accessibilityFeatures.filter((feature) => feature !== featureToRemove),
+  }));
+};
+
+
 
   const handleArrayChange = (e, field) => {
     const { value } = e.target;
@@ -103,6 +309,11 @@ const CreateJobPosting = () => {
       if (response.ok) {
         alert('Job posting created successfully!');
         console.log(result);
+
+        navigate('/job-dashboard');
+        //<Link to="/job-dashboard" />
+
+
       } else {
         console.error('Error:', result);
         alert('Failed to create job posting: ' + result.message);
@@ -132,7 +343,7 @@ const CreateJobPosting = () => {
                   name="jobTitle"
                   value={formData.jobTitle}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                   required
                 />
               </div>
@@ -142,7 +353,7 @@ const CreateJobPosting = () => {
                   name="jobDescription"
                   value={formData.jobDescription}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                   rows="4"
                   required
                 />
@@ -153,7 +364,7 @@ const CreateJobPosting = () => {
                   name="jobLocation"
                   value={formData.jobLocation}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                 >
                   <option value="Remote">Remote</option>
                   <option value="On-site">On-site</option>
@@ -161,15 +372,58 @@ const CreateJobPosting = () => {
                 </select>
               </div>
               <div>
-                <label className="block mb-2 font-poppins text-[15px]">Industry</label>
-                <input
-                  type="text"
-                  name="industry"
-                  value={formData.industry}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
-                  required
-                />
+                <label className="block mb-2 text-[15px]">Industry</label>
+                <select
+                    onChange={handleAddIndustry}
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black font-poppins"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Select Industry</option>
+                    {industryOptions.map((industry) => (
+                      <option key={industry} value={industry}>
+                        {industry}
+                      </option>
+                    ))}
+                  </select>
+                  {isOtherIndustry && (
+                    <div className="space-y-2 mt-4">
+                      <input
+                        type="text"
+                        value={otherIndustry}
+                        onChange={(e) => setOtherIndustry(e.target.value)}
+                        placeholder="Enter your industry"
+                        className="w-full px-3 py-2 border border-black rounded-xl font-poppins"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddOtherIndustry}
+                        className="px-4 py-2 bg-black text-white rounded font-poppins"
+                      >
+                        Add Industry
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2 mt-4 mb-2">
+                    {Array.isArray(formData.industry) && formData.industry.length > 0 && (
+                      <>
+                        <h3 className="text-lg font-bold">Selected Industries:</h3>
+                        <ul>
+                          {formData.industry.map((industry, index) => (
+                            <li key={index} className="flex justify-between items-center pl-8 pr-2 font-poppins">
+                              <span>{industry}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveIndustry(industry)}
+                                className="text-black hover:text-red-700 font-poppins"
+                              >
+                                <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
               </div>
               <div>
                 <label className="block mb-2 font-poppins text-[15px]">Employment Type</label>
@@ -177,7 +431,7 @@ const CreateJobPosting = () => {
                   name="employmentType"
                   value={formData.employmentType}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                 >
                   <option value="Full-time">Full-time</option>
                   <option value="Part-time">Part-time</option>
@@ -192,7 +446,7 @@ const CreateJobPosting = () => {
                   name="applicationDeadline"
                   value={formData.applicationDeadline}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                   required
                 />
               </div>
@@ -206,16 +460,35 @@ const CreateJobPosting = () => {
             <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">Job Qualifications</h2>
             <p className="text-center text-gray-600 mb-8 font-poppins text-[16px]">Specify the qualifications and skills required for this position.</p>
             <div className="space-y-6">
-              <div>
-                <label className="block  mb-2 font-poppins text-[15px]">Key Skills or Competencies (comma-separated)</label>
-                <input
-                  type="text"
-                  name="keySkills"
-                  value={formData.keySkills.join(', ')}
-                  onChange={(e) => handleArrayChange(e, 'keySkills')}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
-                />
+                        <div>
+              <label className="block mb-2 font-poppins text-[15px]">Key Skills or Competencies</label>
+              <div className="flex flex-wrap">
+                {keySkillsOptions.map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => {
+                      // Update the state for selected skills
+                      const newSkills = formData.keySkills.includes(skill)
+                        ? formData.keySkills.filter(s => s !== skill) // Remove if already selected
+                        : [...formData.keySkills, skill]; // Add if not selected
+
+                      setFormData({ ...formData, keySkills: newSkills });
+                      console.log(newSkills); // Log the updated skills for debugging
+                    }}
+                    className={`flex items-center mr-2 justify-start px-3 py-1 border rounded-full transition-colors duration-200 mb-2 font-poppins
+                      ${formData.keySkills.includes(skill) ? 'bg-gray-500 text-white' : 'bg-white text-black border-black'}`}
+                  >
+                    {/* Conditional rendering for icons */}
+                    {!formData.keySkills.includes(skill) ? (
+                      <i className="fas fa-plus mr-2"></i> // Show plus icon if not selected
+                    ) : (
+                      <i className="fas fa-check mr-2"></i> // Show check icon if selected
+                    )}
+                    {skill}
+                  </button>
+                ))}
               </div>
+            </div>
               <div>
                 <label className="block  mb-2 font-poppins text-[15px]">Other Skills (Please specify)</label>
                 <input
@@ -223,18 +496,26 @@ const CreateJobPosting = () => {
                   name="otherSkills"
                   value={formData.otherSkills}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                 />
               </div>
               <div>
-                <label className="block  mb-2 font-poppins text-[15px]">Required Education Level</label>
-                <input
-                  type="text"
+                <label className="block mb-2 font-poppins text-[15px]">Required Education Level</label>
+                <select
                   name="educationLevel"
                   value={formData.educationLevel}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"                  required
-                />
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  required
+                >
+                  <option value="" disabled>Select an education level</option>
+                  <option value="High School">High School</option>
+                  <option value="Associate Degree">Associate Degree</option>
+                  <option value="Bachelor's Degree">Bachelor's Degree</option>
+                  <option value="Master's Degree">Master's Degree</option>
+                  <option value="Doctorate">Doctorate</option>
+                  <option value="Certification">Certification</option>
+                </select>
               </div>
               <div>
                 <label className="block  mb-2 font-poppins text-[15px]">Years of Experience</label>
@@ -243,7 +524,7 @@ const CreateJobPosting = () => {
                   name="yearsOfExperience"
                   value={formData.yearsOfExperience}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"                  required
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"                  required
                 />
               </div>
             </div>
@@ -280,23 +561,75 @@ const CreateJobPosting = () => {
                 </div>
               </div>
               <div>
-                <label className="block  mb-2 font-poppins text-[15px]">Benefits (comma-separated)</label>
-                <input
-                  type="text"
-                  name="benefits"
-                  value={formData.benefits.join(', ')}
-                  onChange={(e) => handleArrayChange(e, 'benefits')}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
-                />
+                <label className="block mb-2 text-[15px]">Benefits</label>
+                <div className="relative">
+                  <select
+                    onChange={(e) => handleAddBenefit(e.target.value)}
+                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins max-h-auto  overflow-y-auto"
+                    value=""
+                  >
+                    <option value="" disabled>
+                      {formData.benefits.length > 0 ? "Select Benefit" : "Select Benefits"}
+                    </option>
+                    {benefitOptions.map((benefit) => (
+                      <option key={benefit} value={benefit}>
+                        {benefit}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="mt-2">
+                    {isOtherBenefit && (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={otherBenefit}
+                          onChange={(e) => setOtherBenefit(e.target.value)}
+                          placeholder="Enter your benefit"
+                          className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddOtherBenefit}
+                          className="px-4 py-2 bg-black text-white rounded font-poppins"
+                        >
+                          Add Benefit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2 mt-4 mb-2">
+                  {Array.isArray(formData.benefits) && formData.benefits.length > 0 && (
+                    <>
+                      <h3 className="text-lg font-bold">Selected Benefits:</h3>
+                      <ul>
+                        {formData.benefits.map((benefit, index) => (
+                          <li key={index} className="flex justify-between items-center pl-8 pr-2 font-poppins">
+                            <span>{benefit}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBenefit(benefit)}
+                              className="text-black hover:text-red-700 font-poppins"
+                            >
+                              <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
               </div>
-              <div>
+                <div>
                 <label className="block  mb-2 font-poppins text-[15px]">Additional Perks</label>
                 <input
                   type="text"
                   name="additionalPerks"
                   value={formData.additionalPerks}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                 />
               </div>
             </div>
@@ -309,23 +642,69 @@ const CreateJobPosting = () => {
             <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">Accessibility and PWD Support</h2>
             <p className="text-center text-gray-600 mb-8 font-poppins text-[16px]">Highlight the accessibility features and support available for PWD candidates.</p>
             <div className="space-y-6">
-              <div>
-                <label className="block  mb-2 font-poppins text-[15px]">Accessibility Features (comma-separated)</label>
-                <input
-                  type="text"
-                  name="accessibilityFeatures"
-                  value={formData.accessibilityFeatures.join(', ')}
-                  onChange={(e) => handleArrayChange(e, 'accessibilityFeatures')}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
-                />
+            <div>
+              <label className="block mb-2 font-poppins text-[15px]">Accessibility Features</label>
+              <select
+                onChange={handleAddAccessibilityFeature}
+                className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black font-poppins"
+                defaultValue=""
+              >
+                <option value="" disabled>Select Accessibility Feature</option>
+                {accessibilityFeaturesOptions.map((feature) => (
+                  <option key={feature} value={feature}>
+                    {feature}
+                  </option>
+                ))}
+              </select>
+              
+              {isOtherFeature && (
+                <div className="space-y-2 mt-4">
+                  <input
+                    type="text"
+                    value={otherFeature}
+                    onChange={(e) => setOtherFeature(e.target.value)}
+                    placeholder="Enter your accessibility feature"
+                    className="w-full px-3 py-2 border border-black rounded-xl font-poppins"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddOtherFeature}
+                    className="px-4 py-2 bg-black text-white rounded font-poppins"
+                  >
+                    Add Feature
+                  </button>
+                </div>
+              )}
+              
+              <div className="space-y-2 mt-4 mb-2">
+                {Array.isArray(formData.accessibilityFeatures) && formData.accessibilityFeatures.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-bold">Selected Accessibility Features:</h3>
+                    <ul>
+                      {formData.accessibilityFeatures.map((feature, index) => (
+                        <li key={index} className="flex justify-between items-center pl-8 pr-2 font-poppins">
+                          <span>{feature}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFeature(feature)}
+                            className="text-black hover:text-red-700 font-poppins"
+                          >
+                            <i className="bi bi-trash"></i> {/* Bootstrap trashcan icon */}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
+            </div>
               <div>
                 <label className="block  mb-2 font-poppins text-[15px]">Any special accommodations or support (optional)</label>
                 <textarea
                   name="specialAccommodations"
                   value={formData.specialAccommodations}
                   onChange={handleChange}
-                  className="w-full p-3 border border-black rounded-xl focus:outline-none focus:border-black"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black"
                   rows="4"
                   placeholder="Describe any special accommodations you can offer..."
                 />
@@ -360,10 +739,25 @@ const CreateJobPosting = () => {
               </div>
               <hr className="border-black" />
 
-              <div className="flex justify-between items-center text-[15px]">
-                <p><strong>Industry:</strong><br />{formData.industry}</p>
-                <button  className="text-black hover:underline ml-2">Edit</button>
+              <div>
+                <p><strong>Industry:</strong></p>
+                <div className="flex flex-wrap">
+                  {formData.industry.map((industry, index) => (
+                    <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                      {industry}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveIndustry(industry)} // Update with the function to remove the selected industry
+                        className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                        aria-label={`Remove ${industry}`}
+                      >
+                        <i className="fas fa-times"></i> {/* X icon */}
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
+
               <hr className="border-black" />
 
               <div className="flex justify-between items-center text-[15px]">
@@ -379,10 +773,24 @@ const CreateJobPosting = () => {
               <hr className="border-black" />
               
               <h3 className="text-xl font-semibold">Qualifications</h3>
-              <div className="flex justify-between items-center text-[15px]">
-                <p><strong>Key Skills:</strong><br />{formData.keySkills.join(', ')}</p>
-                <button className="text-black hover:underline ml-2">Edit</button>
-              </div>
+              <div>
+                <p><strong>Key Skills:</strong></p>
+                <div className="flex flex-wrap">
+                  {formData.keySkills.map((skill, index) => (
+                    <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)} // Make sure to define this function
+                        className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                        aria-label={`Remove ${skill}`}
+                      >
+                        <i className="fas fa-times"></i> {/* X icon */}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                </div>
               <hr className="border-black" />
 
               <div className="flex justify-between items-center text-[15px]">
@@ -410,9 +818,23 @@ const CreateJobPosting = () => {
               </div>
               <hr className="border-black" />
 
-              <div className="flex justify-between items-center">
-                <p><strong>Benefits:</strong><br />{formData.benefits.join(', ')}</p>
-                <button  className="text-black hover:underline ml-2">Edit</button>
+              <div>
+                <p><strong>Benefits:</strong></p>
+                <div className="flex flex-wrap mb-2">
+                  {formData.benefits.map((benefit, index) => (
+                    <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                      {benefit}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBenefit(benefit)} // Ensure this function is defined
+                        className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                        aria-label={`Remove ${benefit}`}
+                      >
+                        <i className="fas fa-times"></i> {/* X icon */}
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
               <hr className="border-black" />
 
@@ -423,9 +845,23 @@ const CreateJobPosting = () => {
               <hr className="border-black" />
 
               <h3 className="text-xl font-semibold">Accessibility & PWD Support</h3>
-              <div className="flex justify-between items-center text-[15px]">
-                <p><strong>Accessibility Features:</strong><br />{formData.accessibilityFeatures.join(', ')}</p>
-                <button className="text-black hover:underline ml-2">Edit</button>
+              <div>
+                <p><strong>Accessibility Features:</strong></p>
+                <div className="flex flex-wrap mb-2">
+                  {formData.accessibilityFeatures.map((feature, index) => (
+                    <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                      {feature}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFeature(feature)} // Ensure this function is defined
+                        className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                        aria-label={`Remove ${feature}`}
+                      >
+                        <i className="fas fa-times"></i> {/* X icon */}
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
               <hr className="border-black" />
 
@@ -467,8 +903,8 @@ const CreateJobPosting = () => {
 
   return (
     <div className="min-h-screen bg-white">
-    <Header />
-    <div className="max-w-4xl mx-auto p-8">
+    <NavEmployer />
+    <div className="flex-1 p-8 bg-white pt-8 p-4 sm:ml-44 "> {/* flex-1 p-8 bg-white pt-20 p-4 sm:ml-64     max-w-4xl mx-auto p-8*/}
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         {renderStep()}
         <div className="flex justify-end  mt-8 mx-auto max-w-2xl">
@@ -507,3 +943,4 @@ const CreateJobPosting = () => {
 };
 
 export default CreateJobPosting;
+

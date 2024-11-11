@@ -38,66 +38,98 @@ const ApplicationDashboard = () => {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold">Job Applications</h2>
-        <div className="flex items-center space-x-4">
-          <input
-            type="text"
-            className="w-64 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search by name or job title"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Add Candidate
-          </button>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+            <h2 className="text-3xl font-bold text-gray-900">Job Applications</h2>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  className="w-72 pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Search by name or job title"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+                <span className="absolute left-3 top-3 text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+              </div>
+              <button className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 ease-in-out flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Candidate
+              </button>
+            </div>
+          </div>
+
+          {/* Table Section */}
+          <div className="overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position Applied</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application ID</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disability Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profile</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredApplications.map(app => (
+                  <tr key={app._id} className="hover:bg-gray-50 transition duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {app.jobseeker?.firstName} {app.jobseeker?.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{app.jobId?.jobTitle}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{app._id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{app.disabilityType}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <a href={app.profileLink} className="text-blue-600 hover:text-blue-800 font-medium">View Profile</a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        app.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        app.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {app.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end gap-2">
+                        <button className="text-blue-600 hover:text-blue-900 p-1" title="View">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <button className="text-yellow-600 hover:text-yellow-900 p-1" title="Edit">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button className="text-gray-600 hover:text-gray-900 p-1" title="More">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <table className="w-full bg-white border border-gray-300 rounded-lg">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="py-2 px-4 border-b">Full Name</th>
-            <th className="py-2 px-4 border-b">Position Applied</th>
-            <th className="py-2 px-4 border-b">Application ID</th>
-            <th className="py-2 px-4 border-b">Disability Type</th>
-            <th className="py-2 px-4 border-b">Profile Link</th>
-            <th className="py-2 px-4 border-b">Application Status</th>
-            <th className="py-2 px-4 border-b">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredApplications.map(app => (
-            <tr key={app._id} className="hover:bg-gray-100">
-              <td className="py-2 px-4 border-b">{app.jobseeker?.firstName} {app.jobseeker?.lastName}</td>
-              <td className="py-2 px-4 border-b">{app.jobId?.jobTitle}</td>
-              <td className="py-2 px-4 border-b">{app._id}</td>
-              <td className="py-2 px-4 border-b">{app.disabilityType}</td>
-              <td className="py-2 px-4 border-b">
-                <a href={app.profileLink} className="text-blue-500 hover:underline">
-                  View
-                </a>
-              </td>
-              <td className="py-2 px-4 border-b">{app.status}</td>
-              <td className="py-2 px-4 border-b flex justify-end space-x-2">
-                <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                  View
-                </button>
-                <button className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-                  Edit
-                </button>
-                <button className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 };

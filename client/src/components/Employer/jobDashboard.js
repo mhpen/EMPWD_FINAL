@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Search, Star, MoreHorizontal, X, Archive, Trash2, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from "../ui/alert.js";
+import NavEmployer from '../ui/navEmployer.js';
 
 
 const ManageJobs = () => {
@@ -27,14 +28,21 @@ const ManageJobs = () => {
   const dropdownRef = useRef(null);
   const notificationTimeoutRef = useRef(null);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+  
+  // Update the fetchJobs function
   const fetchJobs = async () => {
     try {
       setLoading(true);
       setError(null);
   
       const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token'); // Make sure you're storing the token on login
-      
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -48,12 +56,16 @@ const ManageJobs = () => {
   
       const response = await fetch(`/api/jobs/employer/${userId}?${queryParams}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Add token to headers
-        },
+        headers: getAuthHeaders(),
         credentials: 'include'
       });
+  
+      if (response.status === 401) {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
       
       if (response.status === 401) {  
         localStorage.removeItem('userId');
@@ -150,22 +162,25 @@ const ManageJobs = () => {
     try {
       const newStarStatus = !currentStarStatus;
       const userId = localStorage.getItem('userId');
-  
+      
       if (!userId) {
         throw new Error('Authentication required');
       }
   
       const response = await fetch(`/api/jobs/${jobId}/is-starred`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',  // This ensures cookies are sent with the request
+        headers: getAuthHeaders(),
         body: JSON.stringify({ 
           isStarred: newStarStatus
         })
       });
   
+      if (response.status === 401) {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update star status');
@@ -193,7 +208,6 @@ const ManageJobs = () => {
       showNotification(error.message, 'error');
     }
   };
-
 
 
   const toggleJobSelection = (jobId) => {
@@ -325,18 +339,18 @@ const ManageJobs = () => {
   };
 
   const FilterModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 font-poppins">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">Filters</h3>
+          <h3 className="text-lg font-bold font-poppins">Filters</h3>
           <button onClick={() => setShowFilters(false)}>
             <X className="h-5 w-5" />
           </button>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-4 font-poppins">
           <div>
-            <label className="block mb-2">Date Posted</label>
+            <label className="block mb-2 font-poppins">Date Posted</label>
             <select 
               className="w-full border rounded p-2"
               value={filters.dateRange}
@@ -404,7 +418,7 @@ const ManageJobs = () => {
   const ActionsDropdown = ({ jobId }) => (
     <div 
       ref={dropdownRef}
-      className="absolute mt-12 right-0 bg-white rounded-md shadow-lg  border"
+      className="absolute mt-12 right-0 bg-white rounded-md shadow-lg border font-poppins"
       style={{ transform: 'translateY(-50%)' }}
     >
       <div className=" z-9999">
@@ -412,26 +426,30 @@ const ManageJobs = () => {
           className="w-full text-left px-2 py-2 hover:bg-gray-100"
           onClick={() => handleActionClick(jobId, 'view')}
         >
-          <i className="bi bi-eye-fill"></i> {/* View icon */}
+          <i className="bi bi-eye-fill"></i> View Job {/* View icon */}
         </button>
         <button
           className="w-full text-left px-2 py-2 hover:bg-gray-100"
           onClick={() => handleActionClick(jobId, 'edit')}
         >
-          <i className="bi bi-pencil-fill"></i> {/* Edit icon */}
+          <i className="bi bi-pencil-fill"></i> Edit Job {/* Edit icon */}
         </button>
         <button
           className="w-full text-left px-2 py-2 hover:bg-gray-100 text-red-600"
           onClick={() => handleActionClick(jobId, 'delete')}
         >
-          <i className="bi bi-trash-fill"></i> {/* Trashcan icon */}
+          <i className="bi bi-trash-fill"></i> Delete Job {/* Trashcan icon */}
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen font-poppins">
+
+      {/* Nav Bar and Side Bar {*/}  
+      <NavEmployer/>  
+
       {/* Notification */}
       {notification && (
         <div className="fixed top-4 right-4 z-50">
@@ -445,34 +463,11 @@ const ManageJobs = () => {
         </div>
       )}
 
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 p-4">
-        <div className="flex flex-col">
-          <div className="mb-4 font-bold text-lg">LOGO</div>
-          <button
-            className="flex items-center justify-between bg-black text-white px-4 py-2 rounded mb-4"
-            onClick={handleAddJob}
-          >
-            <span>Create Jobs</span>
-            <Plus className="h-4 w-4" />
-          </button>
-          <nav className="space-y-4">
-            <button className="w-full text-left">Jobs</button>
-            <button className="w-full text-left">Interviews</button>
-            <button className="w-full text-left">Candidates</button>
-          </nav>
-        </div>
-      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 bg-white">
+      <div className="flex-1 p-8 bg-white pt-12 p-4 sm:ml-64">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Jobs</h1>
-          <div className="flex space-x-6">
-            <button className="text-gray-500">Notifications</button>
-            <button className="text-gray-500">Messages</button>
-            <div className="w-10 h-10 bg-black rounded-full"></div>
-          </div>
         </header>
 
         <div className="flex justify-between items-center mb-4">
@@ -550,77 +545,76 @@ const ManageJobs = () => {
                 <th className="text-left p-4">Actions</th>
               </tr>
             </thead>
-           
-  <tbody>
-    {loading ? (
-      <tr>
-        <td colSpan="6" className="text-center p-4">Loading...</td>
-      </tr>
-    ) : error ? (
-      <tr>
-        <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
-      </tr>
-    ) : filteredJobs.length === 0 ? (
-      <tr>
-        <td colSpan="6" className="text-center p-4">No jobs found</td>
-      </tr>
-    ) : (
-      filteredJobs.map((job) => (
-        <tr 
-          key={job._id} 
-          className="bg-white hover:bg-gray-50 cursor-pointer"
-          onClick={() => handleRowClick(job._id)}
-        >
-          <td className="p-4" onClick={(e) => e.stopPropagation()}>
-            <input 
-              type="checkbox"
-              checked={selectedJobs.has(job._id)}
-              onChange={() => toggleJobSelection(job._id)}
-              className="rounded border-gray-300"
-            />
-          </td>
-          <td className="p-4">{job.jobTitle}</td>
-          <td className="p-4">{job.candidatesCount || 'N/A'}</td>
-          <td className="p-4">{new Date(job.datePosted).toLocaleDateString()}</td>
-          <td className="p-4">
-            <span className={`px-3 py-1 rounded-full text-sm ${
-              job.jobStatus === 'Open' ? 'bg-green-100 text-green-800' :
-              job.jobStatus === 'Closed' ? 'bg-red-100 text-red-800' :
-              job.jobStatus === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {job.jobStatus}
-            </span>
-          </td>
-          <td className="p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-end relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleStar(job._id, starredJobs.has(job._id));
-                }}
-                className="mr-2"
-              >
-                <Star 
-                  className={`h-5 w-5 ${starredJobs.has(job._id) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} 
-                />
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveDropdown(activeDropdown === job._id ? null : job._id);
-                }}
-                className="hover:bg-gray-100 p-1 rounded-full"
-              >
-                <MoreHorizontal className="h-5 w-5 cursor-pointer" />
-              </button>
-              {activeDropdown === job._id && <ActionsDropdown jobId={job._id} />}
-            </div>
-          </td>
-        </tr>
-      ))
-    )}
-  </tbody>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4">Loading...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4 text-red-500">{error}</td>
+                </tr>
+              ) : filteredJobs.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center p-4">No jobs found</td>
+                </tr>
+              ) : (
+                filteredJobs.map((job) => (
+                  <tr 
+                    key={job._id} 
+                    className="bg-white hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(job._id)}
+                  >
+                    <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedJobs.has(job._id)}
+                        onChange={() => toggleJobSelection(job._id)}
+                        className="rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="p-4">{job.jobTitle}</td>
+                    <td className="p-4">{job.candidatesCount || 'N/A'}</td>
+                    <td className="p-4">{new Date(job.datePosted || job.createdAt).toLocaleDateString()}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        job.jobStatus === 'Open' ? 'bg-green-100 text-green-800' :
+                        job.jobStatus === 'Closed' ? 'bg-red-100 text-red-800' :
+                        job.jobStatus === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {job.jobStatus}
+                      </span>
+                    </td>
+                    <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleStar(job._id, starredJobs.has(job._id));
+                          }}
+                          className="mr-2"
+                        >
+                          <Star 
+                            className={`h-5 w-5 ${starredJobs.has(job._id) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} 
+                          />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdown(activeDropdown === job._id ? null : job._id);
+                          }}
+                          className="hover:bg-gray-100 p-1 rounded-full"
+                        >
+                          <MoreHorizontal className="h-5 w-5 cursor-pointer" />
+                        </button>
+                        {activeDropdown === job._id && <ActionsDropdown jobId={job._id} />}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>

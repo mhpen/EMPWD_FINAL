@@ -2,6 +2,7 @@ import express from 'express';
 import { registerAdmin, loginAdmin, getAllJobs } from '../../../controllers/adminController.js'; // Adjust the import path as necessary
 import { authMiddleware, roleMiddleware } from '../../../middleware/authMiddlewareControl.js'; // Adjust the import path as necessary
 
+
 const router = express.Router();
 
 // Public routes

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import NavRegister from '../ui/navRegister';
+import { useNavigate } from 'react-router-dom';
 
 const steps = [
   { id: 1, title: 'Account Info' },
@@ -12,8 +13,47 @@ const steps = [
   { id: 7, title: 'Confirmation' }
 ];
 
+const disabilityOptions = [
+  'Visual', 
+  'Hearing', 
+  'Mobility', 
+  'Other'
+];
+
+const jobTitleOptions = [
+  'Software Engineer',
+  'Data Analyst',
+  'Product Manager',
+  'Graphic Designer',
+  'Marketing Specialist',
+  'Sales Representative',
+  'Other'
+];
+
+const industryOptions = [
+  'Technology',
+  'Healthcare',
+  'Finance',
+  'Education',
+  'Manufacturing',
+  'Retail',
+  'Other'
+];
+
+const idTypes = [
+  'PWD ID',
+  'Passport',
+  'Driver License',
+  'National ID',
+  'Other ID'
+];
+
+
+
 const CreateJobSeeker = () => {
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -33,9 +73,23 @@ const CreateJobSeeker = () => {
     preferredJobTitles: [],
     industry: [],
     employmentType: '',
-    profilePicture: null,
-    resumeUrl: null
+    documents: {
+      resume: null,
+      pwdId: null,
+      validId: null,
+      others: []
+    },
+    profilePicture: null
   });
+  const [isOtherJobTitle, setIsOtherJobTitle] = useState(false);
+  const [isOtherDisability, setIsOtherDisability] = useState(false);
+  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
+  const [otherIndustry, setOtherIndustry] = useState('');
+  const navigate = useNavigate();
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const validateCurrentStep = () => {
     const validations = {
@@ -54,159 +108,100 @@ const CreateJobSeeker = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    
-    if (files && files[0]) {
-      const fileURL = URL.createObjectURL(files[0]); // Create a temporary URL for the file
-      setFormData((prev) => ({
-        ...prev,
-        [name]: fileURL, // Store this as a string URL temporarily
-      }));
-    }
-  };
-
-    // <---------------------------------- USE STATES ------------------------------------>
-  
-  const [isOtherJobTitle, setIsOtherJobTitle] = useState(false);
-  const [isOtherDisability, setIsOtherDisability] = useState(false);
-
-  const [isOtherIndustry, setIsOtherIndustry] = useState(false);
-  const [otherIndustry, setOtherIndustry] = useState('');
-
-  // <---------------------------------- OPTIONS ------------------------------------>
-
-  const disabilityOptions = [
-    'Visual', 
-    'Hearing', 
-    'Mobility', 
-    'Other']; 
-
-    // Define your job title options
-    const jobTitleOptions = [
-      'Software Engineer',
-      'Data Analyst',
-      'Product Manager',
-      'Graphic Designer',
-      'Marketing Specialist',
-      'Sales Representative',
-      'Other'
-    ];
-
-      // Industry options
-  const industryOptions = [
-    'Technology',
-    'Healthcare',
-    'Education',
-    'Finance',
-    'Manufacturing',
-    'Retail',
-    'Others'
-  ];
-
-    // <-------------------------------- HANDLE 1 FUNCTIONS --------------------------------------------->
   const handleAddDisability = (e) => {
     const selectedDisability = e.target.value;
-
     if (selectedDisability === 'Other') {
       setIsOtherDisability(true);
     } else if (selectedDisability && !formData.disabilityType.includes(selectedDisability)) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        disabilityType: [...prev.disabilityType, selectedDisability],
+        disabilityType: [...prev.disabilityType, selectedDisability]
       }));
     }
   };
 
   const handleAddOtherDisability = () => {
     if (formData.otherDisability.trim() !== '') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        disabilityType: [...prev.disabilityType, formData.otherDisability],
+        disabilityType: [...prev.disabilityType, formData.otherDisability]
       }));
-      setFormData((prev) => ({ ...prev, otherDisability: '' }));
+      setFormData(prev => ({ ...prev, otherDisability: '' }));
       setIsOtherDisability(false);
     }
   };
 
-  const handleRemoveDisability = (disabilityToRemove) => {
-    setFormData((prev) => ({
+  const handleRemoveDisability = (itemToRemove) => {
+    setFormData(prev => ({
       ...prev,
-      disabilityType: prev.disabilityType.filter((disability) => disability !== disabilityToRemove),
+      disabilityType: prev.disabilityType.filter(item => item !== itemToRemove)
     }));
   };
 
-  // Function to handle adding a job title
   const handleAddJobTitle = (e) => {
     const selectedJobTitle = e.target.value;
     if (selectedJobTitle === 'Other') {
       setIsOtherJobTitle(true);
     } else if (selectedJobTitle && !formData.preferredJobTitles.includes(selectedJobTitle)) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        preferredJobTitles: [...prev.preferredJobTitles, selectedJobTitle],
+        preferredJobTitles: [...prev.preferredJobTitles, selectedJobTitle]
       }));
     }
   };
 
-  // Function to handle adding a custom job title
   const handleAddOtherJobTitle = () => {
     if (formData.otherJobTitle.trim() !== '') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         preferredJobTitles: [...prev.preferredJobTitles, formData.otherJobTitle],
-        otherJobTitle: '',
+        otherJobTitle: ''
       }));
       setIsOtherJobTitle(false);
     }
   };
 
-  // Function to handle removing a job title
   const handleRemoveJobTitle = (jobTitleToRemove) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      preferredJobTitles: prev.preferredJobTitles.filter((jobTitle) => jobTitle !== jobTitleToRemove),
+      preferredJobTitles: prev.preferredJobTitles.filter(jobTitle => jobTitle !== jobTitleToRemove)
     }));
   };
 
-  // handle adding industry
   const handleAddIndustry = (e) => {
     const selectedIndustry = e.target.value;
-
-    if (selectedIndustry === 'Others') {
-      setIsOtherIndustry(true); // Show input for custom industry
+    if (selectedIndustry === 'Other') {
+      setIsOtherIndustry(true);
     } else if (selectedIndustry && !formData.industry.includes(selectedIndustry)) {
-      setFormData((prevData) => ({
-        ...prevData,
-        industry: [...prevData.industry, selectedIndustry],
+      setFormData(prev => ({
+        ...prev,
+        industry: [...prev.industry, selectedIndustry]
       }));
     }
-
-    // Reset the select input after adding an industry
-    e.target.value = '';
   };
 
-// handle adding custom industry
   const handleAddOtherIndustry = () => {
-    if (otherIndustry.trim() && !formData.industry.includes(otherIndustry.trim())) {
-      setFormData((prevData) => ({
-        ...prevData,
-        industry: [...prevData.industry, otherIndustry.trim()],
+    if (otherIndustry.trim() !== '') {
+      setFormData(prev => ({
+        ...prev,
+        industry: [...prev.industry, otherIndustry]
       }));
-      setOtherIndustry(''); // Clear the custom input field
-      setIsOtherIndustry(false); // Hide the custom input
+      setOtherIndustry('');
+      setIsOtherIndustry(false);
     }
   };
 
-  // handle removing industry
   const handleRemoveIndustry = (industryToRemove) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      industry: prevData.industry.filter((industry) => industry !== industryToRemove),
+    setFormData(prev => ({
+      ...prev,
+      industry: prev.industry.filter(industry => industry !== industryToRemove)
     }));
+  };
+
+
 
   const handleBack = () => {
-    setCurrentStep(prevStep => Math.max(prevStep - 1, 1)); // Go back one step, but not below 1
+    setCurrentStep(prevStep => Math.max(prevStep - 1, 1));
   };
 
   const handleNext = () => {
@@ -214,72 +209,104 @@ const CreateJobSeeker = () => {
       alert('Please fill all required fields');
       return;
     }
-    setCurrentStep(prevStep => Math.min(prevStep + 1, steps.length)); // Go to next step, but not above the last step
+    setCurrentStep(prevStep => Math.min(prevStep + 1, steps.length));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Validate the current step before proceeding
     if (!validateCurrentStep()) {
       alert('Please fill all required fields');
       return;
     }
-  
+
     try {
-      const jobSeekerData = {
-        basicInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender,
-          age: formData.age,
-        },
-        locationInfo: {
-          city: formData.city,
-          country: formData.country,
-          postal: formData.postal,
-          address: formData.address,
-        },
-        disabilityInfo: {
-          disabilityType: formData.disabilityType,
-          disabilityAdditionalInfo: formData.disabilityAdditionalInfo,
-        },
-        workPreferences: {
-          preferredJobTitles: formData.preferredJobTitles,
-          industry: formData.industry,
-          employmentType: formData.employmentType,
-        },
-        additionalInfo: {
-          profilePicture: formData.profilePicture, // Should now be a string URL
-          resumeUrl: formData.resumeUrl, // Should now be a string URL
-        },
-        email: formData.email,
-        password: formData.password,
-        role: 'jobseeker',
-      };
-  
-      const response = await fetch('http://localhost:3000/api/jobseekers/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(jobSeekerData),
+      const formDataToSend = new FormData();
+
+      // Append non-file fields
+      Object.keys(formData).forEach(key => {
+        if (!['documents'].includes(key)) {
+          // Remove extra quotes from stringified values
+          const value = typeof formData[key] === 'string' ? formData[key].replace(/"/g, '') : formData[key];
+          formDataToSend.append(key, value);
+        }
       });
-  
+
+      // Append file fields
+      if (formData.documents.resume) formDataToSend.append('resume', formData.documents.resume);
+      if (formData.documents.pwdId) formDataToSend.append('pwdId', formData.documents.pwdId);
+      if (formData.documents.validId) formDataToSend.append('validId', formData.documents.validId);
+
+      // Handle otherDocs safely
+      if (Array.isArray(formData.documents.others)) {
+        formData.documents.others.forEach(doc => formDataToSend.append('otherDocs', doc));
+      } else if (formData.documents.others) {
+        formDataToSend.append('otherDocs', formData.documents.others);
+      }
+
+      // Send the request
+      const response = await fetch('http://localhost:5001/api/jobseekers/create', {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      // Check for a successful response
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-  
-      const data = await response.json();
-      console.log('Success:', data);
-      setCurrentStep(steps.length); // Move to success step
+
+      alert('Job Seeker Profile created successfully!');
+      navigate('/login');
     } catch (error) {
-      console.error('Error creating profile:', error);
-      alert('Failed to create profile: ' + error.message);
+      console.error('Error creating Job Seeker Profile:', error);
+      alert(`Failed to create Job Seeker Profile: ${error.message}`);
     }
   };
+  const handleIdTypeChange = (e) => {
+    setFormData({ ...formData, idType: e.target.value });
+  };
+  
+  const handleFileChange = (e, fieldName) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size exceeds 5MB limit");
+        return;
+      }
 
+      // Check file type
+      const acceptedTypes = {
+        resume: ['.pdf', '.doc', '.docx'],
+        pwdId: ['.pdf', '.jpg', '.jpeg', '.png'],
+        validId: ['.pdf', '.jpg', '.jpeg', '.png'],
+        otherDocs: ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']
+      };
+
+      // Add this check
+      if (!acceptedTypes[fieldName]) {
+        console.error(`Invalid field name: ${fieldName}`);
+        return;
+      }
+
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!acceptedTypes[fieldName].includes(fileExtension)) {
+        alert("Invalid file type");
+        return;
+      }
+
+      // If all checks pass, update the form data
+      setFormData(prevData => ({
+        ...prevData,
+        documents: {
+          ...prevData.documents,
+          [fieldName]: file
+        }
+      }));
+    }
+  };
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -301,30 +328,42 @@ const CreateJobSeeker = () => {
                 className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                 placeholder="Email" required />
             </div>
-            <div className="mb-2">
-              <label className="block mb-2 font-poppins text-[15px]">
-                Password
-              </label>
-              <input 
-                type="password" 
-                name="password" 
-                value={formData.password} 
-                onChange={handleInputChange} 
-                className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
-                placeholder="Password" required />
-            </div>
-            <div>
-              <label className="block mb-2 font-poppins text-[15px]">
-                Confirm Password
-              </label>
-              <input 
-                type="password" 
-                name="confirmPassword" 
-                value={formData.confirmPassword} 
-                onChange={handleInputChange} 
-                className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
-                placeholder="Confirm Password" required />
-            </div>
+            <div className="mb-2 relative">
+        <label className="block mb-2 font-poppins text-[15px]">Password</label>
+        <input 
+          type={showPassword ? "text" : "password"} 
+          name="password" 
+          value={formData.password} 
+          onChange={handleInputChange} 
+          className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+          placeholder="Password" 
+          required 
+        />
+        <div 
+          className="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+          onClick={togglePasswordVisibility}
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </div>
+        </div>
+          <div className="relative">
+            <label className="block mb-2 font-poppins text-[15px]">Confirm Password</label>
+            <input 
+              type={showPassword ? "text" : "password"} 
+              name="confirmPassword" 
+              value={formData.confirmPassword} 
+              onChange={handleInputChange} 
+              className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+              placeholder="Confirm Password" 
+              required 
+            />
+            <div 
+              className="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+              onClick={togglePasswordVisibility}
+            >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </div>
+        </div>
           </div>
         );
       case 2:
@@ -601,63 +640,63 @@ const CreateJobSeeker = () => {
               </>
             )}
           </div>
-
           <div className="mb-4">
-                  <label className="block mb-2 font-poppins text-[15px]">
-                    Preferred Industries
-                  </label>
-                  <select
-                    onChange={handleAddIndustry}
-                    className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black font-poppins"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>Select Industry</option>
-                    {industryOptions.map((industry) => (
-                      <option key={industry} value={industry}>
-                        {industry}
-                      </option>
+            <label className="block mb-2 font-poppins text-[15px]">
+              Industry
+            </label>
+            <select
+              name="industry"
+              onChange={handleAddIndustry}
+              className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+              defaultValue=""
+            >
+              <option value="" disabled>Select an industry</option>
+              {industryOptions.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </select>
+            {isOtherIndustry && (
+              <div className="space-y-2 mt-4">
+                <input
+                  type="text"
+                  value={otherIndustry}
+                  onChange={(e) => setOtherIndustry(e.target.value)}
+                  placeholder="Enter your industry"
+                  className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddOtherIndustry}
+                  className="px-4 py-2 bg-black text-white rounded font-poppins"
+                >
+                  Add Industry
+                </button>
+              </div>
+            )}
+            <div className="space-y-2 mt-4 mb-2">
+              {formData.industry.length > 0 && (
+                <>
+                  <h3 className="text-lg font-bold">Selected Industries:</h3>
+                  <ul>
+                    {formData.industry.map((industry, index) => (
+                      <li key={index} className="flex justify-between items-center pl-8 pr-2">
+                        <span>{industry}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIndustry(industry)}
+                          className="text-black hover:text-red-700"
+                        >
+                          <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                        </button>
+                      </li>
                     ))}
-                  </select>
-                  {isOtherIndustry && (
-                    <div className="space-y-2 mt-4">
-                      <input
-                        type="text"
-                        value={otherIndustry}
-                        onChange={(e) => setOtherIndustry(e.target.value)}
-                        placeholder="Enter your industry"
-                        className="w-full px-3 py-2 border border-black rounded-xl font-poppins"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddOtherIndustry}
-                        className="px-4 py-2 bg-black text-white rounded font-poppins"
-                      >
-                        Add Industry
-                      </button>
-                    </div>
-                  )}
-                  <div className="space-y-2 mt-4 mb-2">
-                    {Array.isArray(formData.industry) && formData.industry.length > 0 && (
-                      <>
-                        <h3 className="text-lg font-bold">Selected Industries:</h3>
-                        <ul>
-                          {formData.industry.map((industry, index) => (
-                            <li key={index} className="flex justify-between items-center pl-8 pr-2 font-poppins">
-                              <span>{industry}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveIndustry(industry)}
-                                className="text-black hover:text-red-700 font-poppins"
-                              >
-                                <i className="fas fa-trash"></i> {/* Trashcan icon */}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </div>
-                </div>
+                  </ul>
+                </>
+              )}
+            </div>
+          </div>
             <div className="mb-2">
               <label className="block mb-2 font-poppins text-[15px]">
                 Employment Type
@@ -679,45 +718,234 @@ const CreateJobSeeker = () => {
             </div>
           </div>
         );
-      case 6:
-        return (
-          <div className="mx-auto space-y-6">
-            <div className="text-center mb-3 mt-4">
-              <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">Set Up Your Profile (Optional)</h2>
-              <p className="text-center text-gray-600 mb-8 font-poppins text-[16px]">Add these details now or skip to complete your registration</p>
-            </div>
-            <div className="mb-2">
-              <label className="block mb-2 font-poppins text-[15px]">
-                Upload Profile Picture
-              </label>
-              <input 
-                type="file" 
-                name="profilePicture" 
-                accept="image/*" 
-                className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black font-poppins"
-                onChange={handleFileChange} required />
-            </div>
-            <div className="mb-2">
-              <label className="block mb-2 font-poppins text-[15px]">
-                Upload Resume
-              </label>
-              <input 
-                type="file" 
-                name="resumeUrl" 
-                accept=".pdf,.doc,.docx" 
-                className="w-full p-2 border border-black rounded-xl focus:outline-none focus:border-black font-poppins"
-                onChange={handleFileChange} required />
-            </div>
-          </div>
-        );
+        case 6:
+            return (
+              <div className="mx-auto space-y-6 max-w-2xl p-6">
+                <div className="text-center mb-8">
+                  <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">
+                    Upload Required Documents
+                  </h2>
+                  <p className="text-center text-gray-600 font-poppins text-[16px]">
+                    Please upload your resume and identification documents
+                  </p>
+                </div>
+          
+                {/* Resume Upload Section */}
+                {/* <div className="mb-6">
+                  <label className="block mb-2 font-poppins text-[15px] font-medium">
+                    Upload Resume
+                  </label>
+                  <div className="space-y-2">
+                    <input 
+                      type="file"
+                      name="resume"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileChange(e, 'resume')}
+                      className="w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-poppins"
+                    />
+                    {formData.resume && (
+                      <p className="text-sm text-green-600">
+                        ✓ {formData.resume.name}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Accepted formats: PDF, DOC, DOCX (max 5MB)
+                    </p>
+                  </div>
+                </div> */}
+          
+                {/* PWD ID Upload Section */}
+                <div className="mb-6">
+                  <label className="block mb-2 font-poppins text-[15px] font-medium">
+                    Upload PWD ID
+                  </label>
+                  <div className="space-y-2">
+                    <input 
+                      type="file"
+                      name="pwdId"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleFileChange(e, 'pwdId')}
+                      className="w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-poppins"
+                    />
+                    {formData.pwdId && (
+                      <p className="text-sm text-green-600">
+                        ✓ {formData.pwdId.name}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Accepted formats: PDF, JPEG, PNG (max 5MB)
+                    </p>
+                  </div>
+                </div>
+          
+                {/* Valid ID Upload Section */}
+                <div className="mb-6">
+                  <label className="block mb-2 font-poppins text-[15px] font-medium">
+                    Upload Valid ID
+                  </label>
+                  <div className="space-y-2">
+                    <input 
+                      type="file"
+                      name="validId"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleFileChange(e, 'validId')}
+                      className="w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-poppins"
+                    />
+                    {formData.validId && (
+                      <p className="text-sm text-green-600">
+                        ✓ {formData.validId.name}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Accepted formats: PDF, JPEG, PNG (max 5MB)
+                    </p>
+                  </div>
+                </div>
+          
+                {/* Other Documents Upload Section */}
+                <div className="mb-6">
+                  <label className="block mb-2 font-poppins text-[15px] font-medium">
+                    Upload Other Supporting Documents (Optional)
+                  </label>
+                  <div className="space-y-2">
+                    <input 
+                      type="file"
+                      name="otherDocs"
+                      accept=".pdf,image/*,.doc,.docx"
+                      onChange={(e) => handleFileChange(e, 'otherDocs')}
+                      className="w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-poppins"
+                      multiple
+                    />
+                    {formData.otherDocs?.length > 0 && (
+                      <div className="mt-2">
+                        {Array.from(formData.otherDocs).map((file, index) => (
+                          <p key={index} className="text-sm text-green-600">
+                            ✓ {file.name}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Accepted formats: PDF, JPEG, PNG, DOC, DOCX (max 5MB each)
+                    </p>
+                  </div>
+                </div>
+          
+                {/* Navigation Buttons */}
+                {/* <div className="flex justify-between mt-8">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    <ChevronLeft className="w-5 h-5 mr-1" />
+                    Back
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Submit
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </button>
+                </div> */}
+              </div>
+            );
       case 7:
         return (
           <div className="mx-auto space-y-6">
             <div className="text-center mb-3 mt-4">
-              <h2 className="font-medium text-center mb-2 font-poppins text-[24px]">Confirmation</h2>
+              <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">Confirmation</h2>
               <p className="text-center text-gray-600 mb-8 font-poppins text-[16px]">Please review your details and submit your application.</p>
+            </div> 
+            <div className="space-y-4 mb-10">
+            <p><strong>Email:</strong><br /> {formData.email}</p>
+            <hr className="border-black" />
+            <p><strong>Password:</strong><br /> {formData.password}</p>
+            <hr className="border-black" />
+            <p><strong>Confirm Password:</strong><br /> {formData.confirmPassword}</p>
+            <hr className="border-black" />
+            <p><strong>First Name:</strong><br /> {formData.firstName}</p>
+            <hr className="border-black" />
+            <p><strong>Last Name:</strong><br /> {formData.lastName}</p>
+            <hr className="border-black" />
+            <p><strong>Birth Date:</strong><br /> {formData.dateOfBirth}</p>
+            <hr className="border-black" />
+            <p><strong>Gender:</strong><br /> {formData.gender}</p>
+            <hr className="border-black" />
+            <p><strong>Age:</strong><br /> {formData.age}</p>
+            <hr className="border-black" />
+            <p><strong>Country:</strong><br /> {formData.country}</p>
+            <hr className="border-black" />
+            <p><strong>Email:</strong><br /> {formData.age}</p>
+            <hr className="border-black" />
+            <p><strong>City:</strong><br /> {formData.city}</p>
+            <hr className="border-black" />
+            <p><strong>Postal:</strong><br /> {formData.postal}</p>
+            <hr className="border-black" />
+            <p><strong>Address:</strong><br /> {formData.address}</p>
+            <hr className="border-black" />
+            <div>
+              <p><strong>Disability Type:</strong></p>
+              <div className="flex flex-wrap">
+                {formData.disabilityType.map((type, index) => (
+                  <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                    {type}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDisability(type)} // Define this function to remove selected disability types
+                      className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                      aria-label={`Remove ${type}`}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
-            <pre>{JSON.stringify(formData, null, 2)}</pre>
+            <hr className="border-black" />
+            <p><strong>Additional Information:</strong><br /> {formData.disabilityAdditionalInfo}</p>
+            <hr className="border-black" />
+            <div>
+              <p><strong>Preferred Job Title:</strong></p>
+              <div className="flex flex-wrap">
+                {formData.preferredJobTitles.map((title, index) => (
+                  <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                    {title}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveJobTitle(title)} // Define this function to remove selected job titles
+                      className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                      aria-label={`Remove ${title}`}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <hr className="border-black" />
+            <div>
+                <p><strong>Industry:</strong></p>
+                <div className="flex flex-wrap">
+                  {formData.industry.map((industry, index) => (
+                    <span key={index} className="border border-black text-gray-800 py-1 px-3 rounded-full text-sm flex items-center mb-2 mr-2">
+                      {industry}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveIndustry(industry)} // Update with the function to remove the selected industry
+                        className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                        aria-label={`Remove ${industry}`}
+                      >
+                        <i className="fas fa-times"></i> {/* X icon */}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            <hr className="border-black" />
+            <p><strong>Employment Type:</strong><br /> {formData.employmentType}</p>
+            <hr className="border-black" />
+            </div>
           </div>
         );
       default:
@@ -750,7 +978,10 @@ const CreateJobSeeker = () => {
                 </button>
               </div>
             ) : (
-              <button type="submit">Submit</button>
+              <button type="submit"
+              className="w-24 px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black font-poppins text-center">
+                Submit
+                </button>
             )}
           </div>
         </form>

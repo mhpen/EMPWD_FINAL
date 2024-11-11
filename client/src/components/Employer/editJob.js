@@ -2,6 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Alert, AlertDescription } from "../ui/alert";
 import { Calendar, Pencil, Check, X } from "lucide-react";
+import { Star, ArrowLeft } from 'lucide-react';
+
+const Header3 = () => {
+  return (
+    <div className="border-b border-gray-300 font-poppins ">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center">
+          <div className="flex items-center">
+            <i className="fas fa-cube text-2xl"></i>
+            <span className="ml-2 text-xl font-semibold">EmpowerPWD</span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-8">
+          <span className="text-lg hidden sm:inline ">Notifications</span>
+          
+          <span className="text-lg hidden sm:inline ">Messages</span>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">Roberto</span>
+            <div className="w-8 h-8 bg-gray-900 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EditJob = () => {
   const { jobId } = useParams();
@@ -244,17 +270,28 @@ const EditJob = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 font-poppins">
+      <Header3/>
       {notification && (
         <Alert className={`mb-4 ${notification.type === 'error' ? 'border-red-500' : 'border-green-500'}`}>
           <AlertDescription>{notification.message}</AlertDescription>
         </Alert>
       )}
 
+      <div className="max-w-4xl mx-auto p-3">
+        <button 
+          onClick={() => window.history.back()} 
+          className="flex items-center text-gray-600 hover:text-gray-900 border border-gray-500 border-2 hover:border-gray-900 p-2 rounded-xl"
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back
+        </button>
+      </div>
+
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Edit Job</h1>
-          <p className="text-gray-600">Click the edit icon to modify any field</p>
+          <h1 className="text-2xl font-bold text-center">Edit Job</h1>
+          <p className="text-gray-600 text-center">Click the edit icon to modify any field</p>
         </div>
 
         <div className="space-y-6">
@@ -293,7 +330,7 @@ const EditJob = () => {
             {renderField('Accessibility Features', 'accessibilityFeatures', formData.accessibilityFeatures)}
             {renderField('Special Accommodations', 'specialAccommodations', formData.specialAccommodations, 'textarea')}
           </div>
-        </div>wa
+        </div>
       </div>
     </div>
   );

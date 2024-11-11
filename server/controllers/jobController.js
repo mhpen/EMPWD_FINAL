@@ -92,7 +92,7 @@ export const getJobById = async (req, res) => {
       success: false,
       message: 'Error fetching job',
       error: error.message,
-    });
+    }); 
   }
 };
 
@@ -393,7 +393,7 @@ export const deleteJob = async (req, res) => {
     }
 
     const job = await Job.findById(jobId);
-    
+
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -408,8 +408,12 @@ export const deleteJob = async (req, res) => {
         message: 'Unauthorized to delete this job',
       });
     }
+    
+    // else if (req.user.role !== 'admin') {
+    //   return res.status(403).json({ success: false, message: 'Access denied: insufficient permissions' });
+    // }
 
-    await job.remove();
+    await Job.findByIdAndDelete(jobId);
 
     res.status(200).json({
       success: true,
@@ -424,12 +428,13 @@ export const deleteJob = async (req, res) => {
     });
   }
 };
+
 export const deleteMultipleJobs = async (req, res) => {
   try {
     const { jobIds, employerId } = req.body;
 
     // Verify the requesting user matches the employerId
-    if (req.user._id !== employerId) {
+    if (req.user._id.toString() !== employerId) {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized to delete these jobs'
@@ -442,7 +447,7 @@ export const deleteMultipleJobs = async (req, res) => {
     // Delete jobs that belong to this employer
     const result = await Job.deleteMany({
       _id: { $in: objectIds },
-      employersId: employerId
+      employersId: new mongoose.Types.ObjectId(employerId)
     });
 
     return res.status(200).json({
@@ -450,7 +455,6 @@ export const deleteMultipleJobs = async (req, res) => {
       message: 'Jobs deleted successfully',
       deletedCount: result.deletedCount
     });
-
   } catch (error) {
     console.error('Delete multiple jobs error:', error);
     return res.status(500).json({

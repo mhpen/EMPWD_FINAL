@@ -19,7 +19,7 @@ const NavRegister = ({ navStep }) => {
       <div className="font-poppins p-4 ">
         <div className="absolute top-2 left-10 m-4 flex items-center">
           <i className="fas fa-cube text-2xl"></i>
-          <span className="ml-2 text-[28px] font-semibold">photo</span>
+          <span className="ml-2 text-[28px] font-semibold">EmpowerPWD</span>
         </div>
         <div className="absolute top-3 right-10 m-4 text-[15px]">
           <span className="text-sm">
