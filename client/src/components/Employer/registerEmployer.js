@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import NavEmRegister from "../ui/navEmRegister";
 import SuccessModal from '../ui/SuccessModal';
+import TermsModal from '../ui/TermsModal'; // Import the TermsModal
 
 const steps = [
   { id: 1, title: 'Account Info' },
@@ -56,6 +57,8 @@ const EmployerRegistrationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   const industryOptions = [
     'Technology',
@@ -339,6 +342,8 @@ const removeDocument = (index) => {
     }
   });
 };
+
+
   const validateStep = (step) => {
     const newErrors = {};
   
@@ -370,6 +375,22 @@ const removeDocument = (index) => {
     }
 
     setIsSubmitting(true);
+    e.preventDefault();
+    if (!validateStep(currentStep)) return;
+
+    if (!acceptTerms && currentStep === 4) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        terms: 'You must accept the terms and conditions',
+      }));
+      return;
+    }
+
+    if (currentStep < 4) {
+      setCurrentStep(prev => prev + 1);
+      return;
+    }
+
     try {
       const response = await fetch('/api/employers', {
         method: 'POST',
@@ -395,7 +416,7 @@ const removeDocument = (index) => {
   return (
     <div className="mx-auto p-4">
       <NavEmRegister steps={steps} currentStep={currentStep} />
-      <Card className="rounded-xl max-w-2xl mx-auto">
+      <Card className=" max-w-2xl mx-auto border-0 bg-none">
         <CardHeader>
           <CardTitle className="font-poppins text-center">Employer Registration - Step {currentStep} of 4</CardTitle>
         </CardHeader>
@@ -824,51 +845,78 @@ const removeDocument = (index) => {
                   />
                 </div>
                 <div className="form-group mt-4">
-        <label>Company Documents</label>
-        {formData.companyInfo.documents.map((document, index) => (
-          <div key={index} className="document-entry border p-4 mt-2">
-            <label htmlFor={`DocumentType-${index}`}>Select Document Type</label>
-            <select
-              id={`DocumentType-${index}`}
-              value={document.documentType}
-              onChange={(e) => handleDocumentTypeChange(index, e.target.value)}
-              className="border rounded p-2 w-full"
-            >
-              <option value="" disabled>Select a Document Type</option>
-              {documentTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+                  <label>Company Documents</label>
+                  {formData.companyInfo.documents.map((document, index) => (
+                    <div key={index} className="document-entry border p-4 mt-2">
+                      <label htmlFor={`DocumentType-${index}`}>Select Document Type</label>
+                      <select
+                        id={`DocumentType-${index}`}
+                        value={document.documentType}
+                        onChange={(e) => handleDocumentTypeChange(index, e.target.value)}
+                        className="border rounded p-2 w-full"
+                      >
+                        <option value="" disabled>Select a Document Type</option>
+                        {documentTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
 
-            {document.documentType && (
-              <div className="mt-2">
-                <label htmlFor={`companyDocument-${index}`}>Upload {document.documentType}</label>
+                      {document.documentType && (
+                        <div className="mt-2">
+                          <label htmlFor={`companyDocument-${index}`}>Upload {document.documentType}</label>
+                          <input
+                            type="file"
+                            id={`companyDocument-${index}`}
+                            onChange={(e) => handleFileChange(index, e.target.files[0])}
+                            className="border p-2 w-full"
+                          />
+                        </div>
+                      )}
+
+                      <button 
+                        type="button" 
+                        onClick={() => removeDocument(index)} 
+                        className="mt-2 text-red-500"
+                      >
+                        Remove Document
+                      </button>
+                    </div>
+                  ))}
+
+                  <button type="button" onClick={addDocument} className="mt-4 p-2 bg-black text-white rounded ml-2">
+                    Add Another Document
+                  </button>
+                  
+                </div>
+                <div className="flex items-center space-x-2">
                 <input
-                  type="file"
-                  id={`companyDocument-${index}`}
-                  onChange={(e) => handleFileChange(index, e.target.files[0])}
-                  className="border p-2 w-full"
+                  type="checkbox"
+                  name="acceptTerms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="h-4 w-4"
                 />
+                <label className="block mb-2 font-poppins text-[15px]">
+                  I accept the{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(true)}
+                    className="text-blue-600 underline"
+                  >
+                    Terms and Conditions
+                  </button>
+                </label>
               </div>
-            )}
+              {errors.terms && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{errors.terms}</AlertDescription>
+                </Alert>
+              )}
 
-            <button 
-              type="button" 
-              onClick={() => removeDocument(index)} 
-              className="mt-2 text-red-500"
-            >
-              Remove Document
-            </button>
-          </div>
-        ))}
-
-        <button type="button" onClick={addDocument} className="mt-4 p-2 bg-blue-500 text-white rounded">
-          Add Another Document
-        </button>
-      </div>
-
+                            
               </div>
             )}
 
@@ -886,13 +934,15 @@ const removeDocument = (index) => {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-24 px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black font-poppins"
+            className="min-w-24 max-w-xs  px-4 py-2 text-sm font-medium text-white bg-black border border-transparent rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black font-poppins"
           >
             {currentStep === 4 ? (isSubmitting ? 'Registering...' : 'Register') : 'Next'}
           </button>
         </CardFooter>
       </Card>
       <SuccessModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <SuccessModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <TermsModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
     </div>
   );
 };

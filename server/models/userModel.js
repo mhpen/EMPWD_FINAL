@@ -5,7 +5,13 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isVerified: { type: Boolean, default: false },
-  role: { type: String, enum: ['jobseeker', 'employer', 'admin'], default: 'jobseeker' }
+  role: { type: String, enum: ['jobseeker', 'employer', 'admin'], default: 'jobseeker' },
+  otp: String,
+  otpExpiry: Date,
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 const BasicInfoSchema = new mongoose.Schema({
@@ -34,7 +40,7 @@ const WorkPreferencesSchema = new mongoose.Schema({
   preferredJobTitles: { type: [String], required: true },
   industry:{ type: [String], required: true} ,
   employmentType: String
-}, { timestamps: true });
+}, { timestamps: true }); 
 
 // Updated JobSeeker schema
 const JobSeekerSchema = new mongoose.Schema({

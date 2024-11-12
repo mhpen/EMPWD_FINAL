@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import NavRegister from '../ui/navRegister';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const steps = [
   { id: 1, title: 'Account Info' },
+  { id: 1.5, title: 'OTP Verification' },
   { id: 2, title: 'Basic Info' },
   { id: 3, title: 'Location Info' },
   { id: 4, title: 'Disability Info' },
@@ -48,7 +50,38 @@ const idTypes = [
   'Other ID'
 ];
 
+const calculatePasswordStrength = (password) => {
+  let strength = 0;
+  if (password.length >= 8) strength += 25;
+  if (password.match(/[0-9]/)) strength += 25;
+  if (password.match(/[!@#$%^&*(),.?":{}|<>]/)) strength += 25;
+  return strength;
+};
 
+const getStrengthColor = (strength) => {
+  if (strength <= 25) return 'bg-gray-200';
+  if (strength <= 50) return 'bg-gray-300';
+  if (strength <= 75) return 'bg-gray-600';
+  return 'bg-black';
+};
+
+const getStrengthTextColor = (strength) => {
+  if (strength <= 25) return 'text-red-400';
+  if (strength <= 50) return 'text-gray-500';
+  if (strength <= 75) return 'text-gray-600';
+  return 'text-black';
+};
+
+const getStrengthText = (strength) => {
+  if (strength <= 25) return 'Weak';
+  if (strength <= 50) return 'Fair';
+  if (strength <= 75) return 'Good';
+  return 'Strong';
+};
+
+const getBorderColor = (isMatch) => {
+  return !isMatch ? 'border-gray-400' : 'border-black';
+};
 
 const CreateJobSeeker = () => {
 
@@ -86,6 +119,33 @@ const CreateJobSeeker = () => {
   const [isOtherIndustry, setIsOtherIndustry] = useState(false);
   const [otherIndustry, setOtherIndustry] = useState('');
   const navigate = useNavigate();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
+  const [timer, setTimer] = useState(60);
+  const [showOtpError, setShowOtpError] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [notification, setNotification] = useState({ type: '', message: '' });
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordMatch, setPasswordMatch] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [selectedDocType, setSelectedDocType] = useState('');
+  const [uploadedDocs, setUploadedDocs] = useState({
+    resume: null,
+    pwdId: null,
+    validId: null,
+    others: []
+  });
+
+  useEffect(() => {
+    let interval;
+    if (currentStep === 1.5 && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [currentStep, timer]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -93,7 +153,20 @@ const CreateJobSeeker = () => {
 
   const validateCurrentStep = () => {
     const validations = {
-      1: () => formData.email && formData.password && formData.password === formData.confirmPassword,
+      1: () => {
+        const errors = {};
+        if (!formData.email) errors.email = 'Email is required';
+        if (!formData.password) {
+          errors.password = 'Password is required';
+        } else if (formData.password.length < 8) {
+          errors.password = 'Password must be at least 8 characters';
+        }
+        if (formData.password !== formData.confirmPassword) {
+          errors.confirmPassword = 'Passwords do not match';
+        }
+        setErrors(errors);
+        return Object.keys(errors).length === 0;
+      },
       2: () => formData.firstName && formData.lastName && formData.dateOfBirth && formData.gender && formData.age,
       3: () => formData.country && formData.city && formData.postal && formData.address,
       4: () => formData.disabilityType && formData.disabilityAdditionalInfo,
@@ -105,7 +178,21 @@ const CreateJobSeeker = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (name === 'password') {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
+    
+    if (name === 'password' || name === 'confirmPassword') {
+      setPasswordMatch(
+        formData.confirmPassword === '' || 
+        value === (name === 'password' ? formData.confirmPassword : formData.password)
+      );
+    }
   };
 
   const handleAddDisability = (e) => {
@@ -201,15 +288,60 @@ const CreateJobSeeker = () => {
 
 
   const handleBack = () => {
-    setCurrentStep(prevStep => Math.max(prevStep - 1, 1));
-  };
-
-  const handleNext = () => {
-    if (!validateCurrentStep()) {
-      alert('Please fill all required fields');
+    if (currentStep === 1.5) {
+      setCurrentStep(1);
       return;
     }
-    setCurrentStep(prevStep => Math.min(prevStep + 1, steps.length));
+    setCurrentStep(prev => prev - 1);
+  };
+
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      if (!validateCurrentStep()) {
+        return;
+      }
+      try {
+        setNotification({ type: 'loading', message: `Sending verification code to ${formData.email}...` });
+        await axios.post('/api/auth/send-otp', { email: formData.email });
+        setCurrentStep(1.5);
+      } catch (error) {
+        setNotification({ type: 'error', message: error.response?.data?.message || 'Failed to send OTP' });
+      } finally {
+        setTimeout(() => {
+          setNotification({ type: '', message: '' });
+        }, 3000);
+      }
+      return;
+    }
+
+    if (currentStep === 1.5) {
+      try {
+        const response = await axios.post('/api/auth/verify-otp', {
+          email: formData.email,
+          otp: otp.join('')
+        });
+        
+        if (response.data.success) {
+          setNotification({ type: 'success', message: 'Email verified successfully!' });
+          setTimeout(() => {
+            setCurrentStep(2);
+            setNotification({ type: '', message: '' });
+          }, 1000);
+        }
+      } catch (error) {
+        setNotification({ type: 'error', message: error.response?.data?.message || 'Invalid OTP' });
+        setTimeout(() => {
+          setNotification({ type: '', message: '' });
+        }, 3000);
+        return;
+      }
+      return;
+    }
+
+    if (!validateCurrentStep()) {
+      return;
+    }
+    setCurrentStep(prev => prev + 1);
   };
 
   const handleSubmit = async (e) => {
@@ -311,7 +443,7 @@ const CreateJobSeeker = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="mx-auto space-y-6 ">
+          <div className="mx-auto space-y-6">
             <div className="text-center mb-2" >
               <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">Let's get started!</h2>
               <p className="text-center text-gray-600 mb-6 font-poppins text-[16px]">To get started, please provide some basic details to set up your account.</p>
@@ -329,43 +461,152 @@ const CreateJobSeeker = () => {
                 placeholder="Email" required />
             </div>
             <div className="mb-2 relative">
-        <label className="block mb-2 font-poppins text-[15px]">Password</label>
+        <label className="block mb-2 font-poppins text-[15px] text-gray-600">
+          Password
+        </label>
         <input 
           type={showPassword ? "text" : "password"} 
           name="password" 
           value={formData.password} 
           onChange={handleInputChange} 
-          className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+          className={`w-full p-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-black font-poppins bg-white text-gray-700 ${
+            errors.password ? 'border-gray-400' : 'border-black'
+          }`}
           placeholder="Password" 
           required 
         />
         <div 
-          className="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+          className="absolute inset-y-0 right-3 pt-6 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
           onClick={togglePasswordVisibility}
         >
           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </div>
+        {formData.password && (
+          <>
+            <div className="mt-2">
+              <div className="h-1.5 w-full bg-gray-100 rounded-full">
+                <div 
+                  className={`h-full rounded-full transition-all duration-300 ${getStrengthColor(passwordStrength)}`}
+                  style={{ width: `${passwordStrength}%` }}
+                />
+              </div>
+              <p className={`text-sm mt-1 ${getStrengthTextColor(passwordStrength)} font-poppins`}>
+                Password Strength: {getStrengthText(passwordStrength)}
+              </p>
+            </div>
+            {formData.password.length < 8 && (
+              <p className="text-gray-500 text-sm mt-1 font-poppins">
+                Password must be at least 8 characters long
+              </p>
+            )}
+          </>
+        )}
+        {errors.password && (
+          <p className="text-gray-500 text-sm mt-1 font-poppins">
+            {errors.password}
+          </p>
+        )}
         </div>
           <div className="relative">
-            <label className="block mb-2 font-poppins text-[15px]">Confirm Password</label>
+            <label className="block mb-2 font-poppins text-[15px] text-gray-600">
+              Confirm Password
+            </label>
             <input 
               type={showPassword ? "text" : "password"} 
               name="confirmPassword" 
               value={formData.confirmPassword} 
               onChange={handleInputChange} 
-              className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
+              className={`w-full p-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-300 font-poppins bg-white text-gray-700 ${
+                !passwordMatch ? 'border-rose-200' : 'border-gray-200'
+              }`}
               placeholder="Confirm Password" 
               required 
             />
             <div 
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+              className="absolute inset-y-0 right-3 pt-6 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
               onClick={togglePasswordVisibility}
             >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </div>
+          {!passwordMatch && formData.confirmPassword && (
+            <p className="text-rose-400 text-sm mt-1">Passwords do not match</p>
+          )}
         </div>
+        {isSendingOtp && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black mx-auto mb-4"></div>
+                <p className="font-poppins text-[15px]">Sending verification code to {formData.email}...</p>
+              </div>
+            </div>
+          )}
           </div>
+          
+          
         );
+        case 1.5:
+  return (
+    <div className="mx-auto space-y-6">
+      <div className="text-center mb-2">
+        <h2 className="font-semibold text-center mb-2 font-poppins text-[36px]">
+          Verify your email
+        </h2>
+        <p className="text-center text-gray-600 mb-6 font-poppins text-[16px]">
+          We've sent a verification code to {formData.email}
+        </p>
+      </div>
+
+      {showOtpError && otpError && (
+        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative font-poppins">
+          {otpError}
+        </div>
+      )}
+
+      {otpSuccess && (
+        <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative font-poppins">
+          {otpSuccess}
+        </div>
+      )}
+
+      <div className="flex gap-4 justify-center my-8">
+        {[...Array(6)].map((_, index) => (
+          <input
+            key={index}
+            type="number"
+            min="0"
+            max="9"
+            maxLength={1}
+            value={otp[index]}
+            onChange={(e) => handleOtpChange(e, index)}
+            onKeyDown={(e) => handleOtpKeyDown(e, index)}
+            onInput={(e) => {
+              e.target.value = e.target.value.replace(/[^0-9]/g, '');
+              if (e.target.value.length > 1) {
+                e.target.value = e.target.value.slice(0, 1);
+              }
+            }}
+            className="w-14 h-14 text-center text-2xl border-2 border-black rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 font-poppins [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        ))}
+      </div>
+
+      <div className="text-center mt-4">
+        {timer > 0 ? (
+          <p className="text-sm text-gray-600 font-poppins">
+            Resend code in {timer} seconds
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResendOTP}
+            className="text-sm text-black hover:text-gray-700 font-poppins"
+          >
+            Resend verification code
+          </button>
+        )}
+      </div>
+    </div>
+  );
       case 2:
         return (
           <div className=" mx-auto space-y-6 ">
@@ -409,9 +650,9 @@ const CreateJobSeeker = () => {
                 onChange={handleInputChange} required />
             </div>
             <div className="mb-2">
-              <label className="block mb-2 font-poppins text-[15px]">
+                <label className="block mb-2 font-poppins text-[15px]">
                 Gender
-              </label>
+                </label>
               <select 
                 name="gender" 
                 value={formData.gender} 
@@ -434,7 +675,7 @@ const CreateJobSeeker = () => {
                 onChange={handleInputChange} 
                 className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 font-poppins"
                 placeholder="Age" required />
-            </div>
+              </div>
           </div>
         );
       case 3:
@@ -685,10 +926,11 @@ const CreateJobSeeker = () => {
                         <span>{industry}</span>
                         <button
                           type="button"
-                          onClick={() => handleRemoveIndustry(industry)}
-                          className="text-black hover:text-red-700"
+                          onClick={() => handleRemoveIndustry(industry)} // Update with the function to remove the selected industry
+                          className="ml-2 text-black hover:text-red-700 focus:outline-none"
+                          aria-label={`Remove ${industry}`}
                         >
-                          <i className="fas fa-trash"></i> {/* Trashcan icon */}
+                          <i className="fas fa-times"></i> {/* X icon */}
                         </button>
                       </li>
                     ))}
@@ -953,9 +1195,111 @@ const CreateJobSeeker = () => {
     }
   };
 
+  const handleOtpChange = (e, index) => {
+    if (isNaN(e.target.value)) return;
+    
+    const newOtp = [...otp];
+    newOtp[index] = e.target.value;
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (e.target.value && index < 5) {
+      const nextInput = e.target.parentElement.children[index + 1];
+      nextInput.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, index) => {
+    // Handle backspace
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = e.target.parentElement.children[index - 1];
+      prevInput.focus();
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (timer > 0) return; // Prevent resend if timer is still running
+    
+    try {
+      setNotification({ type: 'loading', message: 'Resending verification code...' });
+      await axios.post('/api/auth/resend-otp', { email: formData.email });
+      
+      // Reset timer and show success message
+      setTimer(60);
+      setNotification({ type: 'success', message: 'Verification code resent successfully!' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setNotification({ type: '', message: '' });
+      }, 3000);
+    } catch (error) {
+      setNotification({ 
+        type: 'error', 
+        message: error.response?.data?.message || 'Failed to resend verification code'
+      });
+    }
+  };
+
+  const handleDocTypeSelect = (e) => {
+    setSelectedDocType(e.target.value);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      setNotification({
+        type: 'error',
+        message: 'File size should not exceed 5MB'
+      });
+      return;
+    }
+
+    setUploadedDocs(prev => ({
+      ...prev,
+      [selectedDocType]: file
+    }));
+  };
+
+  const handleRemoveFile = (docType) => {
+    setUploadedDocs(prev => ({
+      ...prev,
+      [docType]: null
+    }));
+  };
+
   return (
     <div className="bg-white items-center min-h-screen"> 
       <NavRegister steps={steps} currentStep={currentStep} />
+      
+      {/* Updated notification banner positioning */}
+      {notification.message && (
+        <div
+          className={`relative p-4 mb-4 transition-all duration-300 ease-in-out ${
+            notification.type === 'error' ? 'bg-red-100 text-red-700' :
+            notification.type === 'success' ? 'bg-green-100 text-green-700' :
+            notification.type === 'loading' ? 'bg-blue-100 text-blue-700' : ''
+          }`}
+        >
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <div className="flex items-center flex-1 justify-center">
+              {notification.type === 'loading' && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current mr-3"></div>
+              )}
+              <p className="text-center font-poppins text-sm">{notification.message}</p>
+            </div>
+            {/* Add close button */}
+            <button 
+              onClick={() => setNotification({ type: '', message: '' })}
+              className="ml-4 text-current hover:opacity-75"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-2xl w-full mx-auto p-8">
         <form onSubmit={currentStep === steps.length ? handleSubmit : (e) => e.preventDefault()}>
           {renderStepContent()}

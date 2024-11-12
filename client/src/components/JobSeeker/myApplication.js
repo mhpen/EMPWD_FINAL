@@ -3,6 +3,7 @@ import { Card } from '../ui/card';
 import { MoreVertical, Calendar as CalendarIcon, ChevronDown, Filter } from 'lucide-react';
 import axios from 'axios';
 import NavSeeker from '../ui/navSeeker';
+import MessageModal from '../messages/MessageModal';
 
 
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -62,110 +63,118 @@ const StatusIndicator = ({ status }) => {
 
 const ApplicationCard = ({ application, onActionSelect }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-visible hover:shadow-md transition-shadow relative border border-black">
-      <div className="p-4 flex items-center gap-6">
-        {/* Section 1: Company Logo */}
-        <div className="flex-shrink-0">
-          <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center">
-            {application.company.logo ? (
-              <img 
-                src={application.company.logo} 
-                alt={application.company.name}
-                className="w-full h-full object-contain rounded-xl"
-              />
-            ) : (
-              <span className="text-2xl font-medium text-gray-500">
-                {application.company.name.charAt(0)}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Section 2: Job Info */}
-        <div className="flex-grow">
-          <h3 className="text-lg font-semibold text-gray-800">
-            {application.job.title}
-          </h3>
-          <p className="text-gray-600">{application.company.name}</p>
-          <div className="mt-2 flex flex-wrap gap-3 text-sm">
-            <span className="text-gray-500">{application.job.location}</span>
-            <span className="text-gray-500">•</span>
-            <span className="text-gray-500">{application.job.employmentType}</span>
-            {(application.job.salary.min > 0 || application.job.salary.max > 0) && (
-              <>
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-500">
-                  ${application.job.salary.min.toLocaleString()} - ${application.job.salary.max.toLocaleString()}
+    <>
+      <div className="bg-white rounded-2xl shadow-sm overflow-visible hover:shadow-md transition-shadow relative border border-black">
+        <div className="p-4 flex items-center gap-6">
+          {/* Section 1: Company Logo */}
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center">
+              {application.company.logo ? (
+                <img 
+                  src={application.company.logo} 
+                  alt={application.company.name}
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              ) : (
+                <span className="text-2xl font-medium text-gray-500">
+                  {application.company.name.charAt(0)}
                 </span>
+              )}
+            </div>
+          </div>
+
+          {/* Section 2: Job Info */}
+          <div className="flex-grow">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {application.job.title}
+            </h3>
+            <p className="text-gray-600">{application.company.name}</p>
+            <div className="mt-2 flex flex-wrap gap-3 text-sm">
+              <span className="text-gray-500">{application.job.location}</span>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-500">{application.job.employmentType}</span>
+              {(application.job.salary.min > 0 || application.job.salary.max > 0) && (
+                <>
+                  <span className="text-gray-500">•</span>
+                  <span className="text-gray-500">
+                    ${application.job.salary.min.toLocaleString()} - ${application.job.salary.max.toLocaleString()}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Section 3: Status */}
+          <div className="flex-shrink-0">
+            <StatusIndicator status={application.status} />
+          </div>
+
+          {/* Section 4: Actions with fixed positioning */}
+          <div className="flex-shrink-0">
+            <button 
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative"
+            >
+              <MoreVertical size={20} className="text-gray-400" />
+            </button>
+            {showDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowDropdown(false)}
+                />
+                <div 
+                  className="absolute right-0 w-48 bg-white rounded-xl shadow-lg py-1 z-50"
+                  style={{
+                    top: 'calc(0% + 0.4rem)',
+                    right: '-11rem',
+                  }}
+                >
+                  <button 
+                    onClick={() => {
+                      onActionSelect('view', application.applicationId);
+                      setShowDropdown(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    View Details
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowMessageModal(true);
+                      setShowDropdown(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Message Recruiter
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onActionSelect('delete', application.applicationId);
+                      setShowDropdown(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+                  >
+                    Delete Application
+                  </button>
+                </div>
               </>
             )}
           </div>
         </div>
-
-        {/* Section 3: Status */}
-        <div className="flex-shrink-0">
-          <StatusIndicator status={application.status} />
-        </div>
-
-        {/* Section 4: Actions with fixed positioning */}
-        <div className="flex-shrink-0">
-          <button 
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative"
-          >
-            <MoreVertical size={20} className="text-gray-400" />
-          </button>
-          {showDropdown && (
-            <>
-              {/* Overlay to capture clicks outside dropdown */}
-              <div 
-                className="fixed inset-0 z-40"
-                onClick={() => setShowDropdown(false)}
-              />
-              {/* Dropdown menu with fixed positioning */}
-              <div 
-                className="absolute right-0 w-48 bg-white rounded-xl shadow-lg py-1 z-50"
-                style={{
-                  top: 'calc(0% + 0.4rem)',
-                  right: '-11rem',
-
-                }}
-              >
-                <button 
-                  onClick={() => {
-                    onActionSelect('view', application.applicationId);
-                    setShowDropdown(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  View Details
-                </button>
-                <button 
-                  onClick={() => {
-                    onActionSelect('message', application.applicationId);
-                    setShowDropdown(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Message Recruiter
-                </button>
-                <button 
-                  onClick={() => {
-                    onActionSelect('delete', application.applicationId);
-                    setShowDropdown(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
-                >
-                  Delete Application
-                </button>
-              </div>
-            </>
-          )}
-        </div>
       </div>
-    </div>
+
+      <MessageModal
+        isOpen={showMessageModal}
+        onClose={() => setShowMessageModal(false)}
+        employerId={application.job.employerId}
+        jobTitle={application.job.title}
+        companyName={application.company.name}
+      />
+    </>
   );
 };
 
@@ -193,6 +202,7 @@ const MyApplications = () => {
           title: app.jobId?.jobTitle || 'Untitled Position',
           location: app.jobId?.jobLocation || 'Location not specified',
           employmentType: app.jobId?.employmentType || 'Not specified',
+          employerId: app.jobId?.employersId?._id || '',
           salary: {
             min: app.jobId?.salaryMin || 0,
             max: app.jobId?.salaryMax || 0
@@ -229,6 +239,8 @@ const MyApplications = () => {
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  
 
   const handleSort = (applications) => {
     return [...applications].sort((a, b) => {
@@ -345,42 +357,8 @@ const MyApplications = () => {
         </div>
       
         <div className="grid grid-cols-3 gap-6">
-                    {/* Calendar and Appointments - left Side */}
-                    <div className="space-y-4 ">
-            <div className="bg-white rounded-xl shadow-sm border border-black">
 
-              {renderCalendar()}
-            </div>
-            
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-black">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-800">
-                    Appointments for {selectedDate.toLocaleDateString()}
-                  </h3>
-                  <CalendarIcon className="w-4 h-4 text-gray-400" />
-                </div>
-                {appointments.length === 0 ? (
-                  <p className="text-sm text-gray-500">No appointments scheduled</p>
-                ) : (
-                  appointments.map((apt, index) => (
-                    <div key={index} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="font-medium text-gray-800">{apt.company}</div>
-                      <div className="text-sm text-gray-600">{apt.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {apt.date.toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content - right Side */}
+          {/* Main Content - left Side */}
           <div className="col-span-2 space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-4 gap-4 ">
@@ -495,7 +473,40 @@ const MyApplications = () => {
               )}
             </div>
           </div>
+          {/* Calendar and Appointments - right Side */}
+          <div className="space-y-4 ">
+            <div className="bg-white rounded-xl shadow-sm border border-black">
 
+              {renderCalendar()}
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-black">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-800">
+                    Appointments for {selectedDate.toLocaleDateString()}
+                  </h3>
+                  <CalendarIcon className="w-4 h-4 text-gray-400" />
+                </div>
+                {appointments.length === 0 ? (
+                  <p className="text-sm text-gray-500">No appointments scheduled</p>
+                ) : (
+                  appointments.map((apt, index) => (
+                    <div key={index} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div className="font-medium text-gray-800">{apt.company}</div>
+                      <div className="text-sm text-gray-600">{apt.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {apt.date.toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>

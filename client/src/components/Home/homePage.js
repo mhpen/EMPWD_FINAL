@@ -1,6 +1,12 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-//import logo from "../../assets/logo3.png";
+import logo from "../../assets/img/logo.svg";
+import myImage from "../../assets/img/IMG1.png";
+import leftImage from "../../assets/img/IMG2.png";
+import rightImage from "../../assets/img/IMG3.png";
+import jobSeekerImage from "../../assets/img/jobseeker.png";
+import employerImage from "../../assets/img/employer.png";
+
 
 
 
@@ -27,7 +33,7 @@ const HomePageComponent = () => {
          <header className="flex justify-between items-center p-6">
             <div className="flex items-center space-x-4">
                <div className="flex items-center">
-                     {/* <img src={logo} alt="logo" className="w-10 h-10 mr-1 ml-2" /> */}
+                     {<img src={logo} alt="logo" className="w-10 h-10 mr-1 ml-2" /> }
                      <span className="ml-2 text-xl font-semibold">EmpowerPWD</span>
                </div>
                <div className="border-r border-black h-6 mr-4 hidden md:block"></div>
@@ -69,20 +75,20 @@ const HomePageComponent = () => {
                <div className="relative flex justify-center items-center">
                      <div className="w-[550px] h-[320px] bg-gray-300 rounded-lg flex items-center justify-center z-10">
                         <div className="w-full h-full border border-black">
-                           <img className="w-full h-full object-cover " scr="" alt="image" /></div>
+                           <img className="w-full h-full object-cover " src={myImage} alt="myImage" /></div>
                      </div>
 
                      {/* Left Image (400x350) */}
                      <div className="absolute left-0 transform -translate-x-3/4 -translate-y-1/4 w-[400px] h-[320px] bg-gray-300 rounded-lg flex items-center justify-center z-20">
                         <div className="w-full h-full border border-black">
-                           <img className="w-full h-full object-cover " src="" alt="Main placeholder image" />
+                           <img className="w-full h-full object-cover " src={leftImage} alt="Left showcase image" />
                            </div>
                      </div>
 
                      {/* Right Image (400x350) */}
                      <div className="absolute right-0 transform translate-x-3/4 -translate-y-1/4 w-[400px] h-[320px] bg-gray-300 rounded-lg flex items-center justify-center z-20">
                         <div className="w-full h-full border border-black ">
-                           <img className="w-full h-full object-cover " src="" alt="Main placeholder image" /></div>
+                           <img className="w-full h-full object-cover " src={rightImage} alt="Right showcase image" /></div>
                      </div>
                </div>
             </div>
@@ -277,7 +283,7 @@ const HomePageComponent = () => {
                            <img 
                                  alt="Placeholder image for job seekers" 
                                  class="w-[600px] max-h-[500px] h-[500px] bg-slate-300" 
-                                 src="" 
+                                 src={jobSeekerImage} 
                            />
                         </div>
 
@@ -285,7 +291,7 @@ const HomePageComponent = () => {
                   
                      <div class="flex flex-col lg:flex-row items-center justify-between mb-20 ">
                         <div class="lg:w-2/5 flex justify-center order-2 lg:order-1 mb-10 lg:mb-0">
-                           <img alt="Placeholder image for employers" class="w-[400px] max-h-[500px] h-[400px] ml-20 bg-slate-400" height="300" src="" width="600"/>
+                           <img alt="Placeholder image for employers" class="w-[400px] max-h-[500px] h-[400px] ml-20 bg-slate-400" height="300" src={employerImage} width="600"/>
                         </div>
                         <div class="lg:w-3/5 text-right order-1 lg:order-2 mr-20 ">
                         <h1 class="text-4xl text-black mb-5 mt-20">
@@ -305,6 +311,48 @@ const HomePageComponent = () => {
                      </div>
                      </div>
                </section>
+               <section className="flex flex-col min-h-screen md:flex-row  w-full font-poppins">
+                  <div className="w-full md:w-1/2 flex flex-col justify-center p-8 md:p-16">
+                     <h1 className="text-3xl md:text-5xl font-bold text-black mb-4 md:mb-8">The #1 PWD Job Portal</h1>
+                     <div className="flex flex-col md:flex-row mb-4 pl-14 text-start">
+                           <div className="md:w-1/2 mb-4 md:mb-0 pr-14">
+                              <p className="text-2xl md:text-4xl font-bold text-black ">25M+</p>
+                              <p className="text-gray-500">Monthly Organic Visitors</p>
+                           </div>
+                           <div className="md:w-1/2">
+                              <p className="text-2xl md:text-4xl font-bold text-black">575+</p>
+                              <p className="text-gray-500">Job Listings</p>
+                           </div>
+                     </div>
+                     <div className="flex flex-col md:flex-row pl-14 text-start ">
+                           <div className=" mb-4 md:mb-0 pr-20 md:w-1/2">
+                              <p className="text-2xl md:text-4xl font-bold text-black">30M</p>
+                              <p className="text-gray-500">Job Applications</p>
+                           </div>
+                           <div className="md:w-1/2">
+                              <p className="text-2xl md:text-4xl font-bold text-black">5M</p>
+                              <p className="text-gray-500">Successful Hires</p>
+                           </div>
+                     </div>
+                  </div>
+                  <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 ">
+                     <h2 className="text-xl md:text-2xl font-bold text-black mb-4 md:mb-8">Get in Touch With Us</h2>
+                     <form className="w-full max-w-sm space-y-2">
+                           <div className="mb-4">
+                              <input className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500" type="text" placeholder="Enter your Name" />
+                           </div>
+                           <div className="mb-4">
+                              <input className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500" type="email" placeholder="Enter a valid email address" />
+                           </div>
+                           <div className="mb-8">
+                              <textarea className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500" placeholder="Enter your message"></textarea>
+                           </div>
+                           <button className="w-full bg-black text-white py-2 font-bold rounded-xl ">SUBMIT</button>
+                     </form>
+                  </div>
+
+               </section>
+
                <footer class="bg-[#9C9C9C] text-white w-full">
                      <div class="container mx-auto mt-6 px-4">
                         <div class="flex flex-col md:flex-row items-start space-y-8 md:space-y-0 md:space-x-16 w-full md:w-auto text-left ml-8">

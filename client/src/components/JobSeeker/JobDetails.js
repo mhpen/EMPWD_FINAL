@@ -47,7 +47,7 @@ const JobDetails = () => {
     fetchJobDetails();
   }, [id]);
 
-  console.log("id:",employerId)
+  console.log("emplyer id:",employerId)
 
 
   //Second useEffect to fetch employer details
@@ -114,7 +114,9 @@ const JobDetails = () => {
   //   fetchUserData();
   // }, []);
 
-  console.log("Employer: ", employer);
+  
+
+  //console.log("Employer: ", employer);
   
 
 

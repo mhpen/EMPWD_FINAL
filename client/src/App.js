@@ -25,7 +25,9 @@ import UserDetailsView from './components/Admin/userDetails'; // New JobManageme
 import UserReview from './components/Admin/userReview';
 import NotFoundPage from './components/ui/404notFound';
 import JobDetailsAdmin from './components/Admin/JobDetails';
-
+import Messages from './components/messages/MessageModal';
+import Conversation from './components/messages/Conversation';
+import MessagesPage from './components/messages/MessagesPage';
 
 
 const App = () => {
@@ -71,6 +73,10 @@ const App = () => {
           <Route path="/employers/create-job" element={<JobPostingForm />} />
           <Route path="/user-type" element={<Usertype />} />
 
+          <Route path="/messages/conversation/:userId" element={<Conversation />} />
+          <Route path="/messages" element={<MessagesPage />} />
+
+          <Route path="/employer/applications" element={<ApplicationDashboard />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

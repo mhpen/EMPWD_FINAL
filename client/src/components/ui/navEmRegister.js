@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import logo from "../../assets/img/logo.svg";
+
 
 const NavEmRegister = ({ navStep }) => {
   const steps = [
@@ -16,7 +18,7 @@ const NavEmRegister = ({ navStep }) => {
       {/* Header Section */}
       <div className="font-poppins p-4 ">
         <div className="absolute top-2 left-10 m-4 flex items-center">
-          <i className="fas fa-cube text-2xl"></i>
+          <img src={logo} alt="logo" className="w-10 h-10 mr-1 ml-2" /> 
           <span className="ml-2 text-[28px] font-semibold">EmpowerPWD</span>
         </div>
         <div className="absolute top-3 right-10 m-4 text-[15px]">

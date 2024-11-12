@@ -1,23 +1,40 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from "react";
-import { Plus, LogOut, Settings, User, LayoutDashboard, Briefcase, FileText, ChevronUp, ChevronDown, Menu } from 'lucide-react';
+import { Plus, LogOut, Settings, User, LayoutDashboard, Briefcase, FileText, ChevronUp, ChevronDown, Menu, MessageCircle, Bell, Users } from 'lucide-react';
 import axios from "axios";
+import logo from "../../assets/img/logo.svg";
 
 const NavEmployer = () => {
    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State for mobile sidebar
+   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
    const [isLoggingOut, setIsLoggingOut] = useState(false);
    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
    const [selectedItem, setSelectedItem] = useState('Dashboard');
    const [userInfo, setUserInfo] = useState({ email: '', accessLevel: '' });
    const [authError, setAuthError] = useState(null);
    const navigate = useNavigate();
-   const location = useLocation(); // Get current location
+   const location = useLocation();
+   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+
+   const addMenuItems = [
+      { label: 'Add Job', path: '/employers/create-job' },
+      { label: 'Add User', path: '/employers/add-user' },
+      { label: 'Add Company', path: '/employers/add-company' },
+   ];
 
    const menuItems = [
+      { 
+         icon: <Plus size={20} />, 
+         label: 'Add New', 
+         isDropdown: true,
+         subItems: addMenuItems
+      },
       { icon: <Briefcase size={20} />, label: 'Jobs', path: '/job-dashboard' },
-      { icon: <Plus size={20} />, label: 'Create Job', path: '/employers/create-job' },
-      { icon: <FileText size={20} />, label: 'Resources', path: '/*' }, // 404 not found muna
+      { icon: <Users size={20} />, label: 'Users', path: '/employers/users' },
+      { icon: <MessageCircle size={20} />, label: 'Messages', path: '/messages', badge: 2 },
+      { icon: <Bell size={20} />, label: 'Notifications', path: '/notifications', badge: 3 },
+      { icon: <FileText size={20} />, label: 'Resources', path: '/*' },
+      { icon: <User size={20} />, label: 'Applicants', path: '/employer/applications' },
    ];
 
    const accountMenuItems = [
@@ -29,8 +46,11 @@ const NavEmployer = () => {
    useEffect(() => {
       const fetchUserData = async () => {
          try {
-            const response = await axios.get('/api/Employers/profile', {
-               withCredentials: true
+            const token = localStorage.getItem('token');
+            const response = await axios.get('/api/employers/profile', {
+               headers: {
+                  Authorization: `Bearer ${token}`
+               }
             });
 
             if (response.data && response.data.employerInfo) {
@@ -38,7 +58,7 @@ const NavEmployer = () => {
                   email: response.data.employerInfo.email || '',
                   accessLevel: response.data.employerInfo.accessLevel || 'N/A'
                });
-               setAuthError(null); 
+               setAuthError(null);
             } else {
                console.log('Invalid response data:', response.data);
                setAuthError('Unable to load employer profile data');
@@ -60,12 +80,12 @@ const NavEmployer = () => {
 
    // Set selected item based on current path
    useEffect(() => {
-      const currentPath = location.pathname; // Get the current path
+      const currentPath = location.pathname;
       const foundItem = menuItems.find(item => item.path === currentPath);
       if (foundItem) {
-         setSelectedItem(foundItem.label); // Set selected item based on path
+         setSelectedItem(foundItem.label);
       }
-   }, [location.pathname, menuItems]);
+   }, [location.pathname]);
 
    const handleLogoutClick = () => {
       setShowLogoutConfirm(true);
@@ -74,13 +94,11 @@ const NavEmployer = () => {
    const confirmLogout = async () => {
       setIsLoggingOut(true);
       try {
-         await axios.post('/api/auth/logout', {}, {
-            withCredentials: true
-         });
+         localStorage.removeItem('token');
+         localStorage.removeItem('userRole');
          navigate('/login');
       } catch (error) {
-         console.error("Logout error:", error);
-         navigate('/login');
+         console.error('Logout error:', error);
       } finally {
          setIsLoggingOut(false);
          setShowLogoutConfirm(false);
@@ -93,10 +111,10 @@ const NavEmployer = () => {
 
    return (
       <div>
-         {/* Toggle Button for Mobile */}
+         {/* Mobile menu button */}
          <button
-            className="p-2 bg-gray-900 text-white fixed top-4 left-4 z-50 md:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="md:hidden fixed top-4 left-4 z-50"
          >
             <Menu size={24} />
          </button>
@@ -106,8 +124,8 @@ const NavEmployer = () => {
             {/* Logo Section */}
             <div className="p-5 border-b border-gray-300">
                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                     <span className="text-white text-lg font-bold">E</span>
+                  <div className="w-8 h-8 flex items-center justify-center">
+                     <img src={logo} alt="logo" className="w-10 h-10 mr-1 ml-2" />
                   </div>
                   <span className="font-semibold text-gray-800">EmpowerPWD</span>
                </div>
@@ -116,23 +134,65 @@ const NavEmployer = () => {
             {/* Navigation Items */}
             <nav className="flex-1 px-2 py-4">
                {menuItems.map((item, index) => (
-                  <Link
-                     key={index}
-                     to={item.path}
-                     onClick={() => setSelectedItem(item.label)}
-                     className={`flex items-center w-full px-4 py-2 mt-1 text-gray-700 rounded-lg transition-all duration-200 relative
-                     ${selectedItem === item.label 
-                        ? 'bg-gray-300 text-black font-medium' 
-                        : 'hover:bg-gray-50'
-                     }
-                     `}
-                  >
-                     {item.icon}
-                     <span className="ml-3">{item.label}</span>
-                     {selectedItem === item.label && (
-                        <div className="absolute left-0 w-1 h-8 bg-black rounded-r-lg" />
+                  <div key={index}>
+                     {item.isDropdown ? (
+                        <div className="relative">
+                           <button
+                              onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                              className={`flex items-center w-full px-4 py-2 mt-1 text-gray-700 rounded-lg transition-all duration-200
+                              ${selectedItem === item.label 
+                                 ? 'bg-gray-300 text-black font-medium' 
+                                 : 'hover:bg-gray-50'
+                              }`}
+                           >
+                              <div className="relative">
+                                 {item.icon}
+                              </div>
+                              <span className="ml-3">{item.label}</span>
+                              {isAddMenuOpen ? <ChevronUp className="ml-auto" size={16} /> : <ChevronDown className="ml-auto" size={16} />}
+                           </button>
+                           
+                           {/* Dropdown Menu */}
+                           {isAddMenuOpen && (
+                              <div className="ml-4 mt-1">
+                                 {item.subItems.map((subItem, subIndex) => (
+                                    <Link
+                                       key={subIndex}
+                                       to={subItem.path}
+                                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100 transition-all duration-200"
+                                    >
+                                       <span className="ml-3">{subItem.label}</span>
+                                    </Link>
+                                 ))}
+                              </div>
+                           )}
+                        </div>
+                     ) : (
+                        <Link
+                           to={item.path}
+                           onClick={() => setSelectedItem(item.label)}
+                           className={`flex items-center w-full px-4 py-2 mt-1 text-gray-700 rounded-lg transition-all duration-200 relative
+                           ${selectedItem === item.label 
+                              ? 'bg-gray-300 text-black font-medium' 
+                              : 'hover:bg-gray-50'
+                           }
+                           `}
+                        >
+                           <div className="relative">
+                              {item.icon}
+                              {item.badge && (
+                                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {item.badge}
+                                 </span>
+                              )}
+                           </div>
+                           <span className="ml-3">{item.label}</span>
+                           {selectedItem === item.label && (
+                              <div className="absolute left-0 w-1 h-8 bg-black rounded-r-lg" />
+                           )}
+                        </Link>
                      )}
-                  </Link>
+                  </div>
                ))}
             </nav>
 

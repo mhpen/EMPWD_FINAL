@@ -51,7 +51,7 @@ const JobList = () => {
 
       <NavSeeker />
 
-      <div className="max-w-8xl w-full mx-auto p-8">
+      <div className="max-w-8xl w-full mx-auto p-8 ">
         {/* Search and filters */}
         <div className="flex flex-col items-center mb-8 transition-all duration-300 ease-in-out">
           <div className="w-full h-32 bg-gray-200 rounded-xl mb-4"></div>

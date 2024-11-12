@@ -52,12 +52,14 @@ const SeekerProfile = () => {
       );
    }
 
+   console.log(profile);
+
    return (
       <>
          <NavSeeker/>
          
 
-         <div className="max-w-6xl mx-auto text-gray-700 text-lg font-semibold font-poppins">
+         <div className="max-w-6xl mx-auto text-gray-700 text-lg font-semibold font-poppins mt-2">
             <button
                onClick={() => navigate(-1)}
                className=" ml-2 flex items-center text-gray-600 text-lg hover:text-gray-900"
@@ -90,7 +92,7 @@ const SeekerProfile = () => {
                      {/* <button className="border border-gray-400 rounded px-4 py-2">Save Jobs</button> */}
                   </div>
                   <hr className="my-4"/>
-                  {/* <div>
+                  <div>
                      <h2 className="text-lg font-semibold">Resume</h2>
                      <div className="mt-2 p-4 bg-gray-200 rounded flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -116,7 +118,7 @@ const SeekerProfile = () => {
                            <i className="fas fa-chevron-right"></i>
                         </button>
                      </div>
-                  </div> */}
+                  </div>
                </>
             )}
          </div>

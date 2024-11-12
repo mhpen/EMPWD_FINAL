@@ -1,164 +1,122 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MessageCircle, Bell } from 'lucide-react';
+import logo from "../../assets/img/logo.svg";
+import LoadingOverlay from './loadingOverlay'; // Import the LoadingOverlay component
 
 const NavSeeker = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessagesDropdown, setShowMessagesDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [userInfo, setUserInfo] = useState({ firstName: '', lastName: '' });
-  const [authError, setAuthError] = useState(null);
-  
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Make the API request - cookies will be sent automatically
-        const response = await axios.get('/api/seekers/profile', {
-          withCredentials: true // This is important for sending cookies
-        });
 
-        // Check if we got valid data back
-        if (response.data && response.data.basicInfo) {
-          setUserInfo({
-            firstName: response.data.basicInfo.firstName || 'Guest',
-            lastName: response.data.basicInfo.lastName || ''
-          });
-          setAuthError(null);
-        } else {
-          console.log('Invalid response data:', response.data);
-          setAuthError('Unable to load profile data');
-        }
-
-      } catch (error) {
-        console.error("Error fetching user data:", error.response || error);
-        
-        if (error.response?.status === 401) {
-          console.log('Unauthorized');
-          navigate('/login');
-        } else if (error.response?.status === 404) {
-          setAuthError('Profile not found. Please complete your profile setup.');
-          navigate('/profile-setup');
-        } else {
-          setAuthError(error.response?.data?.message || 'An error occurred while loading your profile');
-        }
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
-
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
 
-  const confirmLogout = async () => {
+  const confirmLogout = () => {
     setIsLoggingOut(true);
-    try {
-      // Call logout endpoint - cookie will be sent automatically
-      await axios.post('/api/auth/logout', {}, {
-        withCredentials: true
-      });
-      
-      navigate('/login');
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Even if the logout request fails, navigate to login
-      navigate('/login');
-    } finally {
-      setIsLoggingOut(false);
-    }
+
+    setTimeout(() => {
+      try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('isVerified');
+        localStorage.removeItem('userRole');
+        navigate('/login');
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        setIsLoggingOut(false);
+        setShowLogoutConfirm(false);
+      }
+    }, 1000); // 1-second delay
   };
 
   const cancelLogout = () => {
     setShowLogoutConfirm(false);
   };
 
-  const toggleProfilePanel = () => {
-    setIsProfileOpen(!isProfileOpen);
-  };
-
-  // If there's an auth error, show it
-  if (authError) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error! </strong>
-          <span className="block sm:inline">{authError}</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <nav className="flex justify-between items-center p-6 font-poppins">
-        <div className="flex items-center space-x-4">
-          <span className="ml-4 text-xl font-semibold">EmpowerPWD</span>
-          <div className="mx-4 border-l border-gray-700 h-6 hidden md:block"></div>
-          <div className="hidden md:flex space-x-8 ml-8 font-poppins">
-            <Link to="/job-list" className="text-gray-600 hover:text-black">Home</Link>
-            <Link to="/job-list" className="text-gray-600 hover:text-black">Explore Jobs</Link>
-            <Link to="/*" className="text-gray-600 hover:text-black">Explore Companies</Link>
-            <Link to="/*" className="text-gray-600 hover:text-black">Resources</Link>
+    <>
+      <nav className="flex items-center justify-between p-4 bg-white shadow-md z-50 sticky top-0">
+        <div className="flex items-center pl-4 ">
+          <img src={logo} alt="Company logo" className="w-12 h-12 mr-4" style={{ borderRadius: '2px' }}/>
+          <Link to="/" className="font-bold text-lg">EmpowerPWD</Link>
+          <div className="border-l-2 border-black h-6 mx-4 hidden md:block"></div>
+          <div className="hidden md:flex space-x-4">
+            <Link to="#" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Home</Link>
+            <Link to="/job-list" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Explore Jobs</Link>
+            <Link to="/companies" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Explore Companies</Link>
+            <Link to="/companies" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Resources</Link>
           </div>
         </div>
+        <div className="flex items-center space-x-4 pr-4">
+          <div className="relative">
+            <button onClick={() => navigate('/messages')} className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full">
+              <MessageCircle className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+            </button>
+          </div>
 
-        <div className="hidden md:flex items-center space-x-2 mr-4 relative">
-          <span className="text-gray-600 hover:text-black cursor-pointer" onClick={toggleProfilePanel}>
-            {userInfo.firstName} {userInfo.lastName}
-          </span>
-          <div className="w-8 h-8 bg-black rounded-full cursor-pointer" onClick={toggleProfilePanel}></div>
-          
-          {isProfileOpen && (
-            <div className="absolute top-12 right-0 w-48 bg-white shadow-lg rounded-lg p-4 z-50">
-              <Link to="/seeker/profile" className="block text-gray-600 hover:text-black mb-2">View Profile</Link>
-              <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-black"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+          <div className="relative">
+            <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full">
+              <Bell className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">5</span>
+            </button>
 
-        <div className="md:hidden">
-          <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600 hover:text-black focus:outline-none">
-            <i className="fas fa-bars text-2xl"></i>
-          </button>
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
+                <div className="px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  <a href="#" className="block px-4 py-3 hover:bg-gray-50">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">JD</div>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">Your application was viewed</p>
+                        <p className="text-sm text-gray-500">Google Inc. viewed your application</p>
+                        <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+                <div className="px-4 py-2 border-t border-gray-200">
+                  <a href="#" className="text-sm text-blue-500 hover:text-blue-600">View all notifications</a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative ml-3">
+            <button onClick={() => setShowMessagesDropdown(!showMessagesDropdown)} className="flex items-center space-x-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-sm font-medium text-gray-600">JS</span>
+              </div>
+            </button>
+
+            {showMessagesDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
+                <Link to="/seeker/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</Link>
+                <Link to="/my-application" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Applications</Link>
+                <button onClick={handleLogoutClick} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
-
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden">
-          <nav className="flex flex-col space-y-4 p-4 font-poppins">
-            <Link to="/job-list" className="text-gray-600 hover:text-black">Home</Link>
-            <Link to="/job-list" className="text-gray-600 hover:text-black">Explore Jobs</Link>
-            <Link to="/explore-companies" className="text-gray-600 hover:text-black">Explore Companies</Link>
-            <Link to="/resources" className="text-gray-600 hover:text-black">Resources</Link>
-            <Link to="/view-UserProfile" className="text-gray-600 hover:text-black">View Profile</Link>
-            <button
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-black text-left"
-            >
-              Logout
-            </button>
-          </nav>
-        </div>
-      )}
-
-      {/* Logout Confirmation Modal */}
+    
       {showLogoutConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-11/12 max-w-md mx-auto">
             <p className="mb-4">Are you sure you want to log out?</p>
             <div className="flex justify-end space-x-4">
               <button onClick={cancelLogout} className="bg-white px-4 py-2 rounded-full border border-black hover:bg-black hover:text-white">Cancel</button>
-              <button onClick={confirmLogout} className="bg-black  rounded-full text-white px-4 py-2 rounded hover:bg-red-600">
+              <button onClick={confirmLogout} className="bg-black rounded-full text-white px-4 py-2 hover:bg-red-600">
                 {isLoggingOut ? 'Logging out...' : 'Confirm'}
               </button>
             </div>
@@ -166,13 +124,9 @@ const NavSeeker = () => {
         </div>
       )}
 
-      {/* Loading Spinner */}
-      {isLoggingOut && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="loader border-t-4 border-blue-500 border-solid rounded-full w-16 h-16 animate-spin"></div>
-        </div>
-      )}
-    </div>
+      {/* Loading Overlay when logging out */}
+      {isLoggingOut && <LoadingOverlay />}
+    </>
   );
 };
 

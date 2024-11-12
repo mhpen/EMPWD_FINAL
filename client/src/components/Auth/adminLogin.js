@@ -1,59 +1,83 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription } from "../ui/alert"; // Importing Alert components
 
-const ApplicationPanel = () => {
-    const [applications, setApplications] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const AdminLogin = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [status, setStatus] = useState({ type: '', message: '' });
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchApplications = async () => {
-            try {
-                const userId = localStorage.getItem('userId'); // Get userId from local storage
-                const response = await axios.get(`/api/applications?userId=${userId}`, {
-                    withCredentials: true // Include cookies with the request
-                });
-                setApplications(response.data);
-            } catch (err) {
-                setError(err.response.data.message || 'Error fetching applications');
-            } finally {
-                setLoading(false);
-            }
-        };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setStatus({ type: '', message: '' }); // Clear previous status
 
-        fetchApplications();
-    }, []);
+        try {
+            const response = await axios.post('/api/admin/login', { email, password });
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+            // Store userId and role in localStorage
+            localStorage.setItem('userId', response.data.userId);
+            localStorage.setItem('userRole', response.data.role);
+
+            setStatus({
+                type: 'success',
+                message: response.data.message || 'Login successful',
+            });
+
+            navigate('/admin/dashboard'); // Redirect to admin dashboard
+        } catch (error) {
+            setStatus({
+                type: 'error',
+                message: error.response?.data?.message || 'Invalid credentials, please try again.',
+            });
+            console.error('Login error:', error);
+        }
+    };
 
     return (
-        <div>
-            <h1>Applications</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Job Title</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {applications.map(app => (
-                        <tr key={app._id}>
-                            <td>{app.basicInfo.firstName} {app.basicInfo.lastName}</td>
-                            <td>{app.basicInfo.email}</td>
-                            <td>{app.basicInfo.phoneNumber}</td>
-                            <td>{app.jobId.jobTitle}</td> {/* Assuming jobId is populated */}
-                            <td>{app.status}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-semibold text-center">Admin Login</h2>
+                {status.message && (
+                    <Alert 
+                        variant={status.type === 'error' ? 'destructive' : 'default'}
+                        className={status.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : ''}
+                    >
+                        <AlertDescription>{status.message}</AlertDescription>
+                    </Alert>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="mb-4">
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <input
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                    </div>
+                    <button 
+                        type="submit" 
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold"
+                    >
+                        Sign In
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
 
-export default ApplicationPanel;
+export default AdminLogin;

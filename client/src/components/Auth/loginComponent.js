@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Eye, EyeOff } from 'lucide-react'; // Import icons
+import logo from "../../assets/img/logo.svg";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -69,7 +70,7 @@ const Login = () => {
       <div className="flex flex-col md:flex-row rounded-lg overflow-hidden max-w-5xl w-full gap-6 p-8">
         <div className="md:w-1/2 p-2">
           <div className="flex items-center mb-8">
-            <i className="fas fa-cube text-2xl mr-2"></i>
+            {<img src={logo} alt="logo" className="w-10 h-10 text-2xl mr-2" /> }
             <span className="text-[20px] font-semibold">EmpowerPWD</span>
           </div>
           <h2 className="font-semibold text-[26px] tracking-widest">Welcome Back!</h2>
@@ -127,13 +128,13 @@ const Login = () => {
               {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
             </button>
           </form>
-          <div className="ml-6 mt-4 text-[12px]">
+          <div className=" mt-4 text-[12px]">
             <p className="text-black">
               Not registered yet?{" "}
               <Link to="/user-type" className="text-black hover:underline">Create account</Link>
             </p>
           </div>
-          <div className="flex items-center ml-6 mt-7 mb-5">
+          <div className="flex items-center  mt-7 mb-5">
             <hr className="flex-grow border-black" />
             <span className="mx-12 text-black text-[12px]">OR</span>
             <hr className="flex-grow border-black" />
