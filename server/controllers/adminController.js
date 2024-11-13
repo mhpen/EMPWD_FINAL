@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import Job from '../models/job.js';
+import Notification from '../models/notification.js';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
@@ -97,89 +99,136 @@ export const loginAdmin = async (req, res) => {
 };
 
 export const getAllJobs = async (req, res) => {
-    try {
-      // Destructure query parameters with defaults
-      const {
-        page = 1,
-        limit = 10,
-        sortBy = 'createdAt',
-        order = 'desc',
-        jobTitle = '',
-        location = '',
-        industry = '',
-        employmentType = '',
-        jobStatus
-      } = req.query;
-  
-      // Build filter object
-      const filter = {};
-  
-      // Title search
-      if (jobTitle) {
-        filter.jobTitle = { $regex: jobTitle, $options: 'i' };
-      }
-  
-      // Location search
-      if (location) {
-        filter.jobLocation = { $regex: location, $options: 'i' };
-      }
-  
-      // Industry filter
-      if (industry) {
-        filter.industry = industry;
-      }
-  
-      // Employment type filter
-      if (employmentType) {
-        filter.employmentType = employmentType;
-      }
-  
-      // Job status filter
-      if (jobStatus) {
-        filter.jobStatus = jobStatus;
-      }
-  
-      // Build sort object
-      const sortOrder = order === 'desc' ? -1 : 1;
-      const sortOptions = { [sortBy]: sortOrder };
-  
-      // Calculate skip value for pagination
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-  
-      // Execute query with filters, sorting, and pagination
-      const jobs = await Job.find(filter)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean();
-  
-      // Get total count for pagination
-      const total = await Job.countDocuments(filter);
-  
-      // Return response
-      res.status(200).json({
-        success: true,
-        data: jobs,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(total / parseInt(limit)),
-          totalRecords: total,
-          recordsPerPage: parseInt(limit)
-        },
-        filters: {
-          jobTitle,
-          location,
-          industry,
-          employmentType,
-          jobStatus
-        }
-      });
-    } catch (error) {
-      console.error('Get all jobs error:', error);
-      res.status(500).json({
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortField = 'createdAt',
+      sortDirection = 'desc',
+      jobTitle = '',
+      status
+    } = req.query;
+
+    const query = {};
+    if (jobTitle) query.jobTitle = { $regex: jobTitle, $options: 'i' };
+    if (status && status !== 'all') query.jobStatus = status;
+
+    const jobs = await Job.find(query)
+      .populate('employersId', 'companyName email')
+      .sort({ [sortField]: sortDirection === 'asc' ? 1 : -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit));
+
+    const total = await Job.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      data: jobs,
+      total,
+      perPage: Number(limit),
+      totalPages: Math.ceil(total / Number(limit))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching jobs',
+      error: error.message
+    });
+  }
+};
+
+export const reviewJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await Job.findById(jobId)
+      .populate('employersId', 'companyName email');
+
+    if (!job) {
+      return res.status(404).json({
         success: false,
-        message: 'Error fetching jobs',
-        error: error.message
+        message: 'Job not found'
       });
     }
-  };
+
+    res.status(200).json({
+      success: true,
+      data: job
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching job details',
+      error: error.message
+    });
+  }
+};
+
+export const updateJobStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { status, message } = req.body;
+
+    // Validate inputs
+    if (!jobId || !status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job ID and status are required'
+      });
+    }
+
+    // Validate status value
+    const validStatuses = ['active', 'declined', 'pending'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job ID format'
+      });
+    }
+
+    const job = await Job.findByIdAndUpdate(
+      jobId,
+      { 
+        jobStatus: status,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    ).populate('employersId', 'email');
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    // Create notification with correct fields
+    await Notification.create({
+      userId: job.employersId._id,
+      jobId: job._id,
+      title: `Job ${status === 'active' ? 'Approved' : 'Declined'}`,
+      message: message || `Your job posting "${job.jobTitle}" has been ${status === 'active' ? 'approved' : 'declined'}`,
+      type: status === 'active' ? 'approval' : 'rejection'
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Job ${status === 'active' ? 'approved' : 'declined'} successfully`,
+      data: job
+    });
+
+  } catch (error) {
+    console.error('Update job status error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating job status',
+      error: error.message
+    });
+  }
+};

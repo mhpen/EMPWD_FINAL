@@ -28,59 +28,65 @@ import JobDetailsAdmin from './components/Admin/JobDetails';
 import Messages from './components/messages/MessageModal';
 import Conversation from './components/messages/Conversation';
 import MessagesPage from './components/messages/MessagesPage';
-
+import JobReview from './components/Admin/JobReview';
+import { NotificationProvider } from './components/Notifications/NotificationContext';
+import Resources from './components/Resources/Resources';
+import ResourcesView from './components/Resources/ResourcesView';
+import AdminResources from './components/Admin/adminResources'; // Add this import
 
 const App = () => {
   return (
     <Router>
-      <div className="app">
-        <Routes>
-          {/* Main job board route */}
-          <Route path="/" element={<HomePageComponent />} />
-          <Route path="/job-list" element={<JobList />} />
-          <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/employers/view-job/:jobId" element={<ViewJob />} />
-          <Route path="/debug" element={<DebugManageJobs />} />
-          <Route path='/employer/application' element={<ApplicationDashboard />} />
-          <Route path="/employers/edit-job/:jobId" element={<EditJob />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/seeker/profile" element={<SeekerProfile />} />
-          <Route path="/admin/users/:userId" element={<UserDetailsView />} />
+      <NotificationProvider>
+        <div className="app">
+          <Routes>
+            {/* Main job board route */}
+            <Route path="/" element={<HomePageComponent />} />
+            <Route path="/job-list" element={<JobList />} />
+            <Route path="/jobs/:id" element={<JobDetails />} />
+            <Route path="/employers/view-job/:jobId" element={<ViewJob />} />
+            <Route path="/debug" element={<DebugManageJobs />} />
+            <Route path='/employer/application' element={<ApplicationDashboard />} />
+            <Route path="/employers/edit-job/:jobId" element={<EditJob />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/seeker/profile" element={<SeekerProfile />} />
+            <Route path="/admin/users/:userId" element={<UserDetailsView />} />
 
 
-          
-          {/* Admin routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/register" element={<AdminRegister />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/jobs" element={<JobManagement />} />
-          <Route path="/admin/jobs/:id" element={<JobDetailsAdmin />} />
-          
+            
+            {/* Admin routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/jobs" element={<JobManagement />} />
+            <Route path="/admin/jobs/:id" element={<JobDetailsAdmin />} />
+            <Route path="/admin/jobs/:jobId/review" element={<JobReview />} />
+            <Route path="/admin/resources" element={<AdminResources />} />
+            <Route path="/admin/user-management" element={<UserManagementSystem />} />
+            <Route path="/admin/users/:userId/review" element={<UserReview />} />
 
 
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/job-management" element={<JobManagement />} />
-          <Route path="/admin/user-management" element={<UserManagementSystem />} />
-          <Route path="/admin/users/:userId/review" element={<UserReview />} />
+            <Route path="/jobs/:id/apply" element={<JobApplication />} />
+            <Route path="/my-application" element={<MyApplicationDetails />} />
 
+            <Route path="/create-employer" element={<CreateEmployer />} />
+            <Route path="/RegisterjobSeeker" element={<CreateJobSeeker />} />
+            <Route path="/job-dashboard" element={<JobsDashboard />} />
+            <Route path="/employers/create-job" element={<JobPostingForm />} />
+            <Route path="/user-type" element={<Usertype />} />
 
-          <Route path="/jobs/:id/apply" element={<JobApplication />} />
-          <Route path="/my-application" element={<MyApplicationDetails />} />
+            <Route path="/messages/conversation/:userId" element={<Conversation />} />
+            <Route path="/messages" element={<MessagesPage />} />
 
-          <Route path="/create-employer" element={<CreateEmployer />} />
-          <Route path="/RegisterjobSeeker" element={<CreateJobSeeker />} />
-          <Route path="/job-dashboard" element={<JobsDashboard />} />
-          <Route path="/employers/create-job" element={<JobPostingForm />} />
-          <Route path="/user-type" element={<Usertype />} />
+            <Route path="/employer/applications" element={<ApplicationDashboard />} />
 
-          <Route path="/messages/conversation/:userId" element={<Conversation />} />
-          <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/employers/resources" element={<Resources />} />
+            <Route path="/employers/resources/view" element={React.createElement(ResourcesView)} />
 
-          <Route path="/employer/applications" element={<ApplicationDashboard />} />
-
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </div>
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </div>
+      </NotificationProvider>
     </Router>
   );
 };

@@ -18,7 +18,7 @@ const SidebarAdmin = () => {
    const menuItems = [
       { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin/dashboard' },
       { icon: <Users size={20} />, label: 'Users', path: '/admin/user-management' },
-      { icon: <Briefcase size={20} />, label: 'Jobs', path: '/admin/job-management' },
+      { icon: <Briefcase size={20} />, label: 'Jobs', path: '/admin/jobs' },
       { icon: <FileText size={20} />, label: 'Resources', path: '/admin/resources' },
    ];
 

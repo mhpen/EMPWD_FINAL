@@ -24,6 +24,7 @@ router.get('/:jobId', getJobById);
 
 // Employer and Admin routes
 router.use(roleMiddleware(['employer', 'admin']));
+router.delete('/delete-job/:jobId', deleteJob);
 
 // Job CRUD operations
 router.post('/create', createJob);
@@ -35,8 +36,6 @@ router.patch('/:jobId/update', updateJob);
 router.patch('/:jobId/status', updateJobStatus);
 router.patch('/:jobId/is-starred', updateJobStarStatus);
 
-// Delete routes
-router.delete('/delete-job/:jobId', deleteJob);
 
 // Admin-only routes
 router.use(roleMiddleware(['admin']));

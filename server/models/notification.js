@@ -1,38 +1,32 @@
 import mongoose from 'mongoose';
 
-const { Schema } = mongoose;
-
-const notificationSchema = new Schema({
+const notificationSchema = new mongoose.Schema({
     userId: {
-        type: Schema.Types.ObjectId,
-        ref: 'User ', // Assuming you have a User model
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true
     },
-    message: {
-        type: String,
-        required: true,
-        maxlength: 255 // Optional: limit message length
+    jobId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job'
     },
-    isRead: {
+    title: String,
+    message: String,
+    type: {
+        type: String,
+        enum: ['approval', 'rejection', 'info'],
+        required: true
+    },
+    read: {
         type: Boolean,
-        default: false // Notifications are unread by default
+        default: false
     },
     createdAt: {
         type: Date,
-        default: Date.now // Automatically set the date when the notification is created
-    },
-    type: {
-        type: String,
-        enum: ['application', 'rating', 'message', 'other'], // Define types of notifications
-        required: true
-    },
-    relatedId: {
-        type: Schema.Types.ObjectId,
-        required: false, // Optional: could reference another model (e.g., applicationId, ratingId)
+        default: Date.now
     }
 });
 
-// Create a Notification model
-const Notification = mongoose.model('Notification', notificationSchema);
+notificationSchema.index({ userId: 1, createdAt: -1 });
 
-export default Notification;
+export default mongoose.model('Notification', notificationSchema);

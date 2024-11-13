@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Job from '../models/job.js'; // Adjust the path as needed
+import { createNotification } from './notificationController.js';
 
 // Helper function to validate ObjectId
 const validateObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -44,7 +45,7 @@ export const createJob = async (req, res) => {
       additionalPerks,
       accessibilityFeatures,
       specialAccommodations,
-      jobStatus: 'Open',
+      jobStatus: 'pending',
     });
 
     await newJob.save();
@@ -202,7 +203,7 @@ export const searchJobs = async (req, res) => {
       limit = 10,
     } = req.query;
 
-    const query = { jobStatus: 'Open' };
+    const query = { jobStatus: 'active' };
 
     if (keyword) {
       query.$or = [
@@ -354,7 +355,7 @@ export const getJobs = async (req, res) => {
     } = req.query;
 
     const query = {
-      jobStatus: 'Open',
+      jobStatus: 'active',
       jobTitle: { $regex: jobTitle, $options: 'i' },
     };
 
@@ -503,4 +504,36 @@ export const updateJobStarStatus = async (req, res) => {
       error: error.message
     });
   }
+};
+
+export const approveJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        job.status = 'approved';
+        await job.save();
+
+        // Create notification for job owner
+        await createNotification({
+            userId: job.userId,
+            type: 'approval',
+            title: 'Job Posting Approved',
+            message: 'Your job posting has been approved and is now live.',
+            jobId: job._id
+        });
+
+        res.json({
+            success: true,
+            message: 'Job approved successfully'
+        });
+    } catch (error) {
+        console.error('Error approving job:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error approving job'
+        });
+    }
 };

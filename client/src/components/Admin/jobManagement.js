@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Search, MoreVertical, Eye, Trash2, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, MoreVertical, Eye, Trash2, ArrowUpDown, Check, X, Lock } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 import SidebarAdmin from './sideNavAdmin';
 
@@ -54,7 +54,7 @@ const JobManagement = () => {
   const handleDelete = async (jobId) => {
     try {
       setActionLoading(true);
-      await axios.delete(`/api/jobs/${jobId}`);
+      await axios.delete(`/api/jobs/delete-job/${jobId}`);
       setJobs(jobs.filter(job => job._id !== jobId));
       setActionStatus({ type: 'success', message: 'Job deleted successfully' });
     } catch (err) {
@@ -276,9 +276,13 @@ const JobManagement = () => {
                       <td className="p-4 capitalize text-gray-700">{job.employmentType}</td>
                       <td className="p-4">
                         <span className={`px-3 py-1 rounded-full text-sm ${
-                          job.jobStatus === 'Open'
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                          job.jobStatus === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : job.jobStatus === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : job.jobStatus === 'declined'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}>
                           {job.jobStatus}
                         </span>
@@ -298,23 +302,52 @@ const JobManagement = () => {
                               <button
                                 className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-t-xl transition-colors flex items-center"
                                 onClick={() => {
-                                  window.location.href = `/admin/jobs/${job._id}`;
+                                  window.location.href = `/admin/jobs/${job._id}/review`;
                                   setOpenDropdownId(null);
                                 }}
                               >
                                 <Eye className="w-4 h-4 mr-2" />
-                                View Details
+                                Review Job
                               </button>
-                              <button
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
-                                onClick={() => {
-                                  handleStatusUpdate(job._id, job.jobStatus === 'Open' ? 'Closed' : 'Open');
-                                  setOpenDropdownId(null);
-                                }}
-                                disabled={actionLoading}
-                              >
-                                {job.jobStatus === 'Open' ? 'Close' : 'Open'} Job
-                              </button>
+                              {job.jobStatus === 'pending' && (
+                                <>
+                                  <button
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center text-green-600"
+                                    onClick={() => {
+                                      handleStatusUpdate(job._id, 'active');
+                                      setOpenDropdownId(null);
+                                    }}
+                                    disabled={actionLoading}
+                                  >
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Approve
+                                  </button>
+                                  <button
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center text-red-600"
+                                    onClick={() => {
+                                      handleStatusUpdate(job._id, 'declined');
+                                      setOpenDropdownId(null);
+                                    }}
+                                    disabled={actionLoading}
+                                  >
+                                    <X className="w-4 h-4 mr-2" />
+                                    Decline
+                                  </button>
+                                </>
+                              )}
+                              {job.jobStatus === 'active' && (
+                                <button
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center"
+                                  onClick={() => {
+                                    handleStatusUpdate(job._id, 'closed');
+                                    setOpenDropdownId(null);
+                                  }}
+                                  disabled={actionLoading}
+                                >
+                                  <Lock className="w-4 h-4 mr-2" />
+                                  Close Job
+                                </button>
+                              )}
                               <button 
                                 className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-b-xl transition-colors text-red-600 flex items-center"
                                 onClick={() => {

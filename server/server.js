@@ -20,6 +20,9 @@ import messageRoute from './routes/messageRoute.js';
 import userRoutes from './routes/userRoutes.js';
 import adminStatsRoutes from  './routes/userRoutes/admin/adminStatsRoute.js'; // New admin routes
 import userManagement from  './routes/userManagement.js';
+import adminJobRoutes from './routes/adminJobRoutes.js';
+import notification from './routes/notifications.js';
+import resourcesRoutes from './routes/resources.js';
 dotenv.config();
 
 const app = express();
@@ -70,6 +73,9 @@ app.use('/api/messages', messageRoute);
 app.use('/api/users', userRoutes);
 app.use('/api/admin/dashboard', adminStatsRoutes);
 app.use('/api/admin/management', userManagement);
+app.use('/api/admin/management', adminJobRoutes);
+app.use('/api/notifications', notification);
+app.use('/api/resources', resourcesRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
