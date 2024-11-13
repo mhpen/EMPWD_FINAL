@@ -5,10 +5,10 @@ EmpowerPWD is an inclusive job platform designed to connect Persons with Disabil
 **Description of Completed Features**
 
 EmpowerPWD has implemented several core features designed to build an inclusive job platform for Persons with Disabilities (PWDs). Key features include:
-· Homepage: Includes SDG-aligned messaging and intuitive navigation for both job seekers and employers.
-· Registration and Login: Tailored processes for job seekers and employers to gather relevant personal, company, and accessibility information.
-· Admin Dashboard: Allows tracking of platform growth, user verification, and job engagement metrics.
-· Job Posting and Application System: Enables job seekers to explore and apply for roles directly, while allowing employers to monitor job performance and manage applicants.
+* Homepage: Includes SDG-aligned messaging and intuitive navigation for both job seekers and employers.
+* Registration and Login: Tailored processes for job seekers and employers to gather relevant personal, company, and accessibility information.
+* Admin Dashboard: Allows tracking of platform growth, user verification, and job engagement metrics.
+* Job Posting and Application System: Enables job seekers to explore and apply for roles directly, while allowing employers to monitor job performance and manage applicants.
 
 · Feedback System (in progress): Designed for job seekers to review inclusivity levels encountered with different employers.
 
