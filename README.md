@@ -29,4 +29,4 @@ EmpowerPWD has implemented several core features designed to build an inclusive 
 
 **Research Sources Referenced**
 
-    This project referenced sources on inclusive employment practices, accessibility standards, the UN’s Sustainable Development Goals (SDGs), and technical resources for Node.js, Tailwind CSS, and React.js. Accessibility guidelines and UX design resources were also consulted to ensure the platform adheres to best practices for inclusivity and usability.
+This project referenced sources on inclusive employment practices, accessibility standards, the UN’s Sustainable Development Goals (SDGs), and technical resources for Node.js, Tailwind CSS, and React.js. Accessibility guidelines and UX design resources were also consulted to ensure the platform adheres to best practices for inclusivity and usability.
